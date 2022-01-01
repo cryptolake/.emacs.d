@@ -1,10 +1,26 @@
 #+title: Emacs Config
 #+PROPERTY: header-args:emacs-lisp :tangle ./init.el :mkdirp yes
 
-* Welcome!
+* Startup performance
 
-** Needed defaults
-This is my emacs config using org mode first we have to configure some defaults. Here we silence the native compiler warning, put all the compilation cache into seperate directory, set the environment to UTF-8, a custom file for custom configs written by emacs and turning on auto revert mode we also set a default directory to put all the backup and auto-save files.
+#+begin_src emacs-lisp
+
+  ;; The default is 800 kilobytes.  Measured in bytes.
+  (setq gc-cons-threshold (* 50 1000 1000))
+
+  (defun crypt/display-startup-time ()
+    (message "Emacs loaded in %s with %d garbage collections."
+             (format "%.2f seconds"
+                     (float-time
+                       (time-subtract after-init-time before-init-time)))
+             gcs-done))
+
+  (add-hook 'emacs-startup-hook #'crypt/display-startup-time)
+
+#+end_src
+ 
+* Needed defaults
+This is my emacs config using org mode first we have to configure some defaults. Here we silence the native compiler warning, put all the compilation cache into seperate directory, set the environment to UTF-8, a custom file for custom configs written by emacs and turning on auto revert mode.
 
 #+begin_src emacs-lisp
 
@@ -20,12 +36,6 @@ This is my emacs config using org mode first we have to configure some defaults.
   (load custom-file)
 
   (global-auto-revert-mode t)
-
-  ;; backup and auto-save files in one single room
-  (setq backup-directory-alist '(("." . "~/.emacs.d/backup/")))
-
-    (setq backup-directory-alist
-          `(("." . ,(concat user-emacs-directory "backup"))))
 
 #+end_src
 
@@ -53,6 +63,20 @@ Emacs has a built in package manager but it doesn't make it easy to automaticall
   (require 'use-package)
   (setq use-package-always-ensure t)
 
+#+end_src
+ 
+* Cleaning
+
+set a default directory to put all the backup and auto-save files and stop use-package from littering.
+
+#+begin_src emacs-lisp
+  ;; backup and auto-save files in one single room
+  (setq backup-directory-alist '(("." . "~/.emacs.d/backup/")))
+
+  (setq backup-directory-alist
+        `(("." . ,(concat user-emacs-directory "backup"))))
+
+  (use-package no-littering)
 #+end_src
 
 * Basic UI Configuration
@@ -216,6 +240,7 @@ This configuration uses [[https://evil.readthedocs.io/en/latest/index.html][evil
 
   (use-package vertico
     :init (vertico-mode)
+    :demand t
     :bind (
            :map vertico-map
            ("C-j" . vertico-next)
@@ -429,6 +454,7 @@ Flycheck is the state of the art emacs syntax checker that integrates automatica
   (use-package flycheck
     :ensure t
     :init (global-flycheck-mode))
+
 #+end_src
 
 ** Company 
@@ -482,8 +508,8 @@ Auto-completion pop-ups with icons!
     :init
     (global-git-gutter-mode t))
 
-                                          ;; - https://magit.vc/manual/forge/Token-Creation.html#Token-Creation
-                                          ;; - https://magit.vc/manual/ghub/Getting-Started.html#Getting-Started
+  ;; - https://magit.vc/manual/forge/Token-Creation.html#Token-Creation
+  ;; - https://magit.vc/manual/ghub/Getting-Started.html#Getting-Started
   (use-package forge)
 
   (crypt/leader-keys
@@ -492,6 +518,7 @@ Auto-completion pop-ups with icons!
     "gss" '(magit-stage-file :which-key "stage file")
     "gu"  '(magit-unstage-file :which-key "unstage file")
     "gsh" '(git-gutter:stage-hunk :which-key "stage hunk"))
+
 #+end_src
 
 ** Rainbow Delimiters
@@ -510,11 +537,11 @@ Auto-completion pop-ups with icons!
 vterm is an improved terminal emulator package which uses a compiled native module to interact with the underlying terminal applications. This enables it to be much faster than term-mode and to also provide a more complete terminal emulation experience.
 
 #+begin_src emacs-lisp
-(use-package vterm
-  :commands vterm
-  :config
-  (setq term-prompt-regexp "^[^#$%>\n]*[#$%>] *")  ;; Set this to match your custom shell prompt
-  (setq vterm-max-scrollback 10000))
+  (use-package vterm
+    :commands vterm
+    :config
+    (setq term-prompt-regexp "^[^#$%>\n]*[#$%>] *")  ;; Set this to match your custom shell prompt
+    (setq vterm-max-scrollback 10000))
 
 #+end_src
 
@@ -546,8 +573,12 @@ eshell is emacs builtin shell its intergrated well in emacs and every command is
     (with-eval-after-load 'esh-opt
       (setq eshell-destroy-buffer-when-process-dies t)
 
-    (eshell-git-prompt-use-theme 'powerline)))
+      (eshell-git-prompt-use-theme 'powerline)))
+
 
 #+end_src
+ 
+
+* END
 
 
