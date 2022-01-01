@@ -1,0 +1,9 @@
+* My special Emacs config
+
+This is my emacs config it's practical and written using org-babel to start put ~Emacs.org~ in your ~.emacs.d~ and do ~M-x org-babel-tangle~.
+
+* Motivation
+
+I've been the amazing doom emacs for a while and even though it covered most of my needs i found my self blocked because i don't know how each part of the framework work together and how to change things in the config.
+
+So i wanted to learn emacs for some, i've been attracted to how it's actually a big list machine and how adding plugins is just the same as native code.
