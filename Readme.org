@@ -4,6 +4,6 @@ This is my emacs config it's practical and written using org-babel to start put 
 
 * Motivation
 
-I've been the amazing doom emacs for a while and even though it covered most of my needs i found my self blocked because i don't know how each part of the framework work together and how to change things in the config.
+I've been using the amazing doom emacs for a while and even though it covered most of my needs i found my self blocked because i don't know how each part of the framework work together and how to change things in the config.
 
-So i wanted to learn emacs for some, i've been attracted to how it's actually a big list machine and how adding plugins is just the same as native code.
+So i wanted to learn emacs for some time, i've been attracted to how it's actually a big list machine and how adding plugins is just the same as builtin code.
