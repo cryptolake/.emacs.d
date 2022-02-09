@@ -19,6 +19,7 @@
 
 #+end_src
  
+
 * Needed defaults
 This is my emacs config using org mode first we have to configure some defaults. Here we silence the native compiler warning, put all the compilation cache into seperate directory, set the environment to UTF-8, a custom file for custom configs written by emacs and turning on auto revert mode.
 
@@ -38,6 +39,7 @@ This is my emacs config using org mode first we have to configure some defaults.
   (global-auto-revert-mode t)
 
 #+end_src
+
 
 * Package System Setup
 
@@ -93,6 +95,7 @@ set a default directory to put all the backup and auto-save files and stop use-p
   (use-package no-littering)
 #+end_src
 
+
 * Basic UI Configuration
 This section configures basic UI settings that remove unneeded elements to make Emacs look a lot more minimal and modern.  
 
@@ -105,7 +108,7 @@ This section configures basic UI settings that remove unneeded elements to make 
   (tooltip-mode -1) ; Disable tooltips
   (set-fringe-mode 10) ; Give some room
 
-  (menu-bar-mode -1) ; Disable menu bar
+  ;; (menu-bar-mode -1) ; Disable menu bar
 
   (column-number-mode)
   (global-display-line-numbers-mode t)
@@ -113,7 +116,6 @@ This section configures basic UI settings that remove unneeded elements to make 
   ;; Disable line numbers for some modes
   (dolist (mode '(org-mode-hook
                   term-mode-hook
-                  vterm-mode-hook
                   shell-mode-hook
                   eshell-mode-hook))
     (add-hook mode (lambda () (display-line-numbers-mode 0))))
@@ -130,6 +132,161 @@ Using Hack font here you can install it in archlinux with the command *pacman -S
 
 #+end_src
 
+
+* Development
+** LSP and DAP support
+
+#+begin_src emacs-lisp
+
+  (use-package lsp-mode
+    :init
+    (setq lsp-keymap-prefix "C-c l")
+    :hook
+    ( (lsp-mode . lsp-enable-which-key-integration))
+    :commands (lsp lsp-deferred))
+
+  (use-package lsp-ui :commands lsp-ui-mode)
+  (use-package dap-mode)
+
+#+end_src
+
+** Languages
+*** c / c++
+c / c++ support
+
+#+begin_src emacs-lisp
+    (setq-default c-basic-offset 4
+                  tab-width 4
+                  indent-tabs-mode t)
+  ;; (add-hook 'c-mode-hook #'lsp-deferred)
+
+#+end_src
+
+*** Python
+Python language support
+
+#+begin_src emacs-lisp
+
+  ;; (add-hook 'python-mode-hook #'lsp-deferred)
+
+#+end_src
+
+** Flycheck
+
+Flycheck is the state of the art emacs syntax checker that integrates automatically with lsp-mode
+
+#+begin_src emacs-lisp
+  (use-package flycheck
+    :ensure t
+    :init (global-flycheck-mode))
+
+#+end_src
+
+** Company 
+
+Auto-completion pop-ups with icons!
+
+#+begin_src emacs-lisp
+  (use-package company
+    :after lsp-mode
+    :hook (lsp-mode . company-mode)
+    :bind (:map company-active-map
+                ("<tab>" . company-complete-selection))
+    (:map lsp-mode-map
+          ("<tab>" . company-indent-or-complete-common))
+    :custom
+    (company-minimum-prefix-length 1)
+    (company-idle-delay 0.0))
+
+  (use-package company-box
+    :hook (company-mode . company-box-mode))
+
+#+end_src
+
+** Projectile
+
+[[https://projectile.mx/][Projectile]] is a project management library for Emacs which makes it a lot easier to navigate around code projects for various languages.  Many packages integrate with Projectile so it's a good idea to have it installed even if you don't use its commands directly.
+
+#+begin_src emacs-lisp
+
+(use-package projectile
+  :ensure t
+  :init
+  (projectile-mode +1)
+  :bind (:map projectile-mode-map
+              ("s-p" . projectile-command-map)
+              ("C-c p" . projectile-command-map)))
+#+end_src
+
+** Magit
+
+[[https://magit.vc/][Magit]] is the best Git interface I've ever used.  Common Git operations are easy to execute quickly using Magit's command panel system.
+
+#+begin_src emacs-lisp
+
+  (use-package magit)
+
+  ;; Add git annotations to the side
+  (use-package git-gutter-fringe
+    :init
+    (global-git-gutter-mode t))
+
+
+#+end_src
+
+** Rainbow Delimiters
+
+[[https://github.com/Fanael/rainbow-delimiters][rainbow-delimiters]] is useful in programming modes because it colorizes nested parentheses and brackets according to their nesting depth.  This makes it a lot easier to visually match parentheses in Emacs Lisp code without having to count them yourself.
+
+#+begin_src emacs-lisp
+
+  (use-package rainbow-delimiters
+    :hook (prog-mode . rainbow-delimiters-mode))
+
+#+end_src
+
+** Tree sitter
+
+[[https://emacs-tree-sitter.github.io/][tree sitter]] is a new parsing system for programming tools.
+
+#+begin_src emacs-lisp
+  (use-package tree-sitter
+    :config
+    (global-tree-sitter-mode))
+
+  (use-package tree-sitter-langs)
+#+end_src
+
+* Terminals
+** eshell
+eshell is emacs builtin shell its intergrated well in emacs and every command is builtin with emacs functions
+
+#+begin_src emacs-lisp
+  (defun crypt/configure-eshell ()
+    ;; Save command history when commands are entered
+    (add-hook 'eshell-pre-command-hook 'eshell-save-some-history)
+
+    ;; Truncate buffer for performance
+    (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
+
+    ;; Bind some useful keys for evil-mode
+    (evil-normalize-keymaps)
+
+    (setq eshell-history-size         10000
+          eshell-buffer-maximum-lines 10000
+          eshell-hist-ignoredups t
+          eshell-scroll-to-bottom-on-input t))
+
+  (use-package eshell
+    :hook (eshell-first-time-mode . crypt/configure-eshell)
+    :config
+
+    (with-eval-after-load 'esh-opt
+      (setq eshell-destroy-buffer-when-process-dies t)))
+
+#+end_src
+ 
+
 * Keybinding Configuration
 
 This configuration uses [[https://evil.readthedocs.io/en/latest/index.html][evil-mode]] for a Vi-like modal editing experience.  [[https://github.com/noctuid/general.el][general.el]] is used for easy keybinding configuration that integrates well with which-key.  [[https://github.com/emacs-evil/evil-collection][evil-collection]] is used to automatically configure various Emacs modes with Vi-like keybindings for evil-mode.
@@ -138,50 +295,6 @@ This configuration uses [[https://evil.readthedocs.io/en/latest/index.html][evil
 
   ;; Make ESC quit prompts
   (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
-
-  (use-package general
-    :init
-    (general-evil-setup t)
-
-    :config
-    (general-create-definer crypt/leader-keys
-      :states '(normal insert visual emacs)
-      :keymaps 'override
-      :prefix "SPC"
-      :global-prefix "C-SPC"))
-
-  (crypt/leader-keys
-    "t"  '(:ignore t :which-key "toggles")
-    "tt" '(load-theme :which-key "choose-theme")
-    "td" '(dired-jump :which-key "dired-jump")
-    "te" '(eshell :which-key "eshell")
-    "tv" '(vterm :which-key "vterm")
-    "tu" '(undo-tree-visualize :which-key "undo tree")
-    "tb" '(ibuffer :which-key "ibuffer"))
-
-  (crypt/leader-keys
-    "f"  '(:ignore t :which-key "files")
-    "ff" '(find-file :which-key "find files"))
-
-  (crypt/leader-keys
-    "b"  '(:ignore t :which-key "buffers")
-    "bk" '(kill-this-buffer :which-key "kill buffer")
-    "bb" '(switch-to-buffer :which-key "switch buffer")
-    "bn" '(next-buffer :which-key "next buffer")
-    "bp" '(previous-buffer :which-key "previous buffer")
-    "bi" '(ibuffer :which-key "ibuffer"))
-
-  (crypt/leader-keys
-    "w"  '(:ignore t :which-key "windows")
-    "wh" '(evil-window-left :which-key "go to left window")
-    "wk" '(evil-window-up :which-key "go to upper window")
-    "wj" '(evil-window-down :which-key "go to lower window")
-    "wl" '(evil-window-right :which-key "go to right window")
-    "wq" '(evil-quit :which-key "quit window")
-    "wv" '(evil-window-vsplit :which-key "split window"))
-
-  (crypt/leader-keys
-    "p"  '(projectile-command-map :wich-key "projects"))
 
   (cua-mode t)
 
@@ -214,20 +327,16 @@ This configuration uses [[https://evil.readthedocs.io/en/latest/index.html][evil
 
 #+end_src
 
+
 * UI Configuration
 
 ** Color Theme
 
-[[https://github.com/hlissner/emacs-doom-themes][doom-themes]] is a great set of themes with a lot of variety and support for many different Emacs modes.  Taking a look at the [[https://github.com/hlissner/emacs-doom-themes/tree/screenshots][screenshots]] might help you decide which one you like best.  
 
 #+begin_src emacs-lisp
-
-  (use-package doom-themes
-    :init (load-theme 'doom-tomorrow-night t))
-
-  (use-package doom-modeline
-    :ensure t
-    :init (doom-modeline-mode 1))
+        (use-package zenburn-theme
+        :config
+        (load-theme 'zenburn t))
 
 #+end_src
 
@@ -280,6 +389,7 @@ This configuration uses [[https://evil.readthedocs.io/en/latest/index.html][evil
 
 #+end_src
 
+
 * Org Mode
 
 [[https://orgmode.org/][Org Mode]] is one of the hallmark features of Emacs.  It is a rich document editor, project planner, task and time tracker, blogging engine, and literate coding utility all wrapped up in one package.
@@ -320,15 +430,6 @@ This section contains the basic configuration for =org-mode= plus the configurat
              "* %<%I:%M %p> - %a :meetings:\n\n%?\n\n"
              :clock-in :clock-resume
              :empty-lines 1))))
-
-  (crypt/leader-keys
-    "o"   '(:ignore t :which-key "org")
-    "oi"  '(org-insert-link :which-key "insert link")
-    "on"  '(org-toggle-narrow-to-subtree :which-key "toggle narrow")
-    "oa"  '(org-agenda :which-key "status")
-    "ot"  '(org-todo-list :which-key "todos")
-    "oc"  '(org-capture t :which-key "capture")
-    "ox"  '(org-export-dispatch t :which-key "export"))
 
 #+end_src
 
@@ -401,6 +502,7 @@ Center Org buffers for better readability
     :hook (org-mode . crypt/org-mode-visual-fill))
 #+end_src
 
+
 * Undo system
 ** Undo-tree
 We use undo-tree to have a good undot system for emacs similar to that for vim
@@ -411,138 +513,6 @@ We use undo-tree to have a good undot system for emacs similar to that for vim
     :config
     (setq undo-tree-auto-save-history t)
     (setq undo-tree-history-directory-alist '(("." . "~/.emacs.d/undo"))))
-#+end_src
-* Development
-** LSP and DAP support
-
-#+begin_src emacs-lisp
-
-  (use-package lsp-mode
-    :init
-    (setq lsp-keymap-prefix "C-c l")
-    :hook
-    ( (lsp-mode . lsp-enable-which-key-integration))
-    :commands (lsp lsp-deferred))
-
-  (crypt/leader-keys
-    "l"    '(:ignore t :which-key "lsp")
-    "ld"  '(xref-find-definitions)
-    "lr"   '(xref-find-references)
-    "la"   '(xref-find-apropos)
-    "ln"  '(lsp-ui-find-next-reference)
-    "lp"  '(lsp-ui-find-prev-reference)
-    "le" '(lsp-ui-flycheck-list)
-    "lS" '(lsp-ui-sideline-mode)
-    "lX" '(lsp-execute-code-action))
-
-  (use-package lsp-ui :commands lsp-ui-mode)
-  (use-package dap-mode)
-
-#+end_src
-
-** Languages
-*** c / c++
-c / c++ support
-
-#+begin_src emacs-lisp
-
-  (add-hook 'c-mode-hook #'lsp-deferred)
-
-#+end_src
-
-*** Python
-Python language support
-
-#+begin_src emacs-lisp
-
-  (add-hook 'python-mode-hook #'lsp-deferred)
-
-#+end_src
-
-** Flycheck
-
-Flycheck is the state of the art emacs syntax checker that integrates automatically with lsp-mode
-
-#+begin_src emacs-lisp
-  (use-package flycheck
-    :ensure t
-    :init (global-flycheck-mode))
-
-#+end_src
-
-** Company 
-
-Auto-completion pop-ups with icons!
-
-#+begin_src emacs-lisp
-  (use-package company
-    :after lsp-mode
-    :hook (lsp-mode . company-mode)
-    :bind (:map company-active-map
-                ("<tab>" . company-complete-selection))
-    (:map lsp-mode-map
-          ("<tab>" . company-indent-or-complete-common))
-    :custom
-    (company-minimum-prefix-length 1)
-    (company-idle-delay 0.0))
-
-  (use-package company-box
-    :hook (company-mode . company-box-mode))
-
-#+end_src
-
-** Projectile
-
-[[https://projectile.mx/][Projectile]] is a project management library for Emacs which makes it a lot easier to navigate around code projects for various languages.  Many packages integrate with Projectile so it's a good idea to have it installed even if you don't use its commands directly.
-
-#+begin_src emacs-lisp
-
-  (use-package projectile
-    :diminish projectile-mode
-    :config (projectile-mode)
-    :init
-    (setq projectile-switch-project-action #'projectile-dired)
-    (when (file-directory-p "~/Projects")
-      (setq projectile-project-search-path '("~/Projects")))
-    (setq projectile-mode-line "Projectile"))
-
-#+end_src
-
-** Magit
-
-[[https://magit.vc/][Magit]] is the best Git interface I've ever used.  Common Git operations are easy to execute quickly using Magit's command panel system.
-
-#+begin_src emacs-lisp
-
-  (use-package magit)
-
-  ;; Add git annotations to the side
-  (use-package git-gutter-fringe
-    :init
-    (global-git-gutter-mode t))
-
-  ;; - https://magit.vc/manual/forge/Token-Creation.html#Token-Creation
-  ;; - https://magit.vc/manual/ghub/Getting-Started.html#Getting-Started
-  (use-package forge)
-
-  (crypt/leader-keys
-    "g"   '(:ignore t :which-key "git")
-    "gg"  '(magit-status :which-key "launch magit")
-    "gss" '(magit-stage-file :which-key "stage file")
-    "gu"  '(magit-unstage-file :which-key "unstage file")
-    "gsh" '(git-gutter:stage-hunk :which-key "stage hunk"))
-
-#+end_src
-
-** Rainbow Delimiters
-
-[[https://github.com/Fanael/rainbow-delimiters][rainbow-delimiters]] is useful in programming modes because it colorizes nested parentheses and brackets according to their nesting depth.  This makes it a lot easier to visually match parentheses in Emacs Lisp code without having to count them yourself.
-
-#+begin_src emacs-lisp
-
-  (use-package rainbow-delimiters
-    :hook (prog-mode . rainbow-delimiters-mode))
-
 #+end_src
 
 * Dired
@@ -624,58 +594,6 @@ Dired is a built-in file manager for Emacs that does some pretty amazing things!
 
   (use-package all-the-icons-dired
     :hook (dired-mode . all-the-icons-dired-mode))
-
-  (use-package dired-hide-dotfiles
-    :hook (dired-mode . dired-hide-dotfiles-mode)
-    :config
-    (evil-collection-define-key 'normal 'dired-mode-map
-      "H" 'dired-hide-dotfiles-mode))
-
-#+end_src
- 
-* Terminals
-** vterm
-vterm is an improved terminal emulator package which uses a compiled native module to interact with the underlying terminal applications. This enables it to be much faster than term-mode and to also provide a more complete terminal emulation experience.
-
-#+begin_src emacs-lisp
-  (use-package vterm
-    :commands vterm
-    :config
-    (setq term-prompt-regexp "^[^#$%>\n]*[#$%>] *")  ;; Set this to match your custom shell prompt
-    (setq vterm-max-scrollback 10000))
-
-#+end_src
-
-** eshell
-eshell is emacs builtin shell its intergrated well in emacs and every command is builtin with emacs functions
-
-#+begin_src emacs-lisp
-  (defun crypt/configure-eshell ()
-    ;; Save command history when commands are entered
-    (add-hook 'eshell-pre-command-hook 'eshell-save-some-history)
-
-    ;; Truncate buffer for performance
-    (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
-
-    ;; Bind some useful keys for evil-mode
-    (evil-normalize-keymaps)
-
-    (setq eshell-history-size         10000
-          eshell-buffer-maximum-lines 10000
-          eshell-hist-ignoredups t
-          eshell-scroll-to-bottom-on-input t))
-
-  (use-package eshell-git-prompt)
-
-  (use-package eshell
-    :hook (eshell-first-time-mode . crypt/configure-eshell)
-    :config
-
-    (with-eval-after-load 'esh-opt
-      (setq eshell-destroy-buffer-when-process-dies t)
-
-      (eshell-git-prompt-use-theme 'powerline)))
-
 
 #+end_src
  
