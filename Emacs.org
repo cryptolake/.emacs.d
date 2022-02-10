@@ -12,7 +12,7 @@
     (message "Emacs loaded in %s with %d garbage collections."
              (format "%.2f seconds"
                      (float-time
-                       (time-subtract after-init-time before-init-time)))
+                      (time-subtract after-init-time before-init-time)))
              gcs-done))
 
   (add-hook 'emacs-startup-hook #'crypt/display-startup-time)
@@ -82,12 +82,12 @@ Auto update packages.
 
 #+end_src
 
+
 * Cleaning
 set a default directory to put all the backup and auto-save files and stop use-package from littering.
 
 #+begin_src emacs-lisp
   ;; backup and auto-save files in one single room
-  (setq backup-directory-alist '(("." . "~/.emacs.d/backup/")))
 
   (setq backup-directory-alist
         `(("." . ,(concat user-emacs-directory "backup"))))
@@ -133,14 +133,55 @@ Using Hack font here you can install it in archlinux with the command *pacman -S
 #+end_src
 
 
+* Keybinding Configuration
+
+This configuration uses [[https://evil.readthedocs.io/en/latest/index.html][evil-mode]] for a Vi-like modal editing experience.  [[https://github.com/emacs-evil/evil-collection][evil-collection]] is used to automatically configure various Emacs modes with Vi-like keybindings for evil-mode.
+
+#+begin_src emacs-lisp
+
+  ;; Make ESC quit prompts
+  (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+
+  (cua-mode t)
+
+  (use-package evil
+    :init 
+    (setq evil-want-integration t)
+    (setq evil-want-keybinding nil)
+    (setq evil-undo-system 'undo-tree)
+    (setq evil-want-C-u-scroll t)
+    :config
+    (evil-mode 1)
+    (define-key evil-insert-state-map (kbd "C-c") 'cua-copy-region)
+    (define-key evil-insert-state-map (kbd "C-v") 'cua-paste)
+    (define-key evil-insert-state-map (kbd "C-x") 'cua-cut-region)
+    (define-key evil-insert-state-map (kbd "C-z") 'undo-tree-undo)
+    (define-key evil-insert-state-map (kbd "C-y") 'undo-tree-redo)
+    (evil-global-set-key 'motion "j" 'evil-next-visual-line)
+    (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
+    )
+
+  (use-package evil-collection
+    :init (evil-collection-init))
+
+  (use-package evil-commentary
+    :init (evil-commentary-mode))
+
+  (use-package evil-surround
+    :ensure t
+    :config
+    (global-evil-surround-mode 1))
+
+#+end_src
+
+
 * Development
 ** LSP and DAP support
 
 #+begin_src emacs-lisp
 
   (use-package lsp-mode
-    :init
-    (setq lsp-keymap-prefix "C-c l")
+    :init (setq lsp-keymap-prefix "C-c l")
     :hook
     ( (lsp-mode . lsp-enable-which-key-integration))
     :commands (lsp lsp-deferred))
@@ -155,10 +196,12 @@ Using Hack font here you can install it in archlinux with the command *pacman -S
 c / c++ support
 
 #+begin_src emacs-lisp
-    (setq-default c-basic-offset 4
-                  tab-width 4
-                  indent-tabs-mode t)
-  ;; (add-hook 'c-mode-hook #'lsp-deferred)
+
+  (add-hook 'c-mode-hook
+            (lambda () (setq-local c-basic-offset 4
+                                   indent-tabs-mode t
+                                   tab-width  4)))
+  (add-hook 'c-mode-hook #'lsp-deferred)
 
 #+end_src
 
@@ -176,6 +219,7 @@ Python language support
 Flycheck is the state of the art emacs syntax checker that integrates automatically with lsp-mode
 
 #+begin_src emacs-lisp
+
   (use-package flycheck
     :ensure t
     :init (global-flycheck-mode))
@@ -187,6 +231,7 @@ Flycheck is the state of the art emacs syntax checker that integrates automatica
 Auto-completion pop-ups with icons!
 
 #+begin_src emacs-lisp
+
   (use-package company
     :after lsp-mode
     :hook (lsp-mode . company-mode)
@@ -198,9 +243,6 @@ Auto-completion pop-ups with icons!
     (company-minimum-prefix-length 1)
     (company-idle-delay 0.0))
 
-  (use-package company-box
-    :hook (company-mode . company-box-mode))
-
 #+end_src
 
 ** Projectile
@@ -209,13 +251,13 @@ Auto-completion pop-ups with icons!
 
 #+begin_src emacs-lisp
 
-(use-package projectile
-  :ensure t
-  :init
-  (projectile-mode +1)
-  :bind (:map projectile-mode-map
-              ("s-p" . projectile-command-map)
-              ("C-c p" . projectile-command-map)))
+  (use-package projectile
+    :ensure t
+    :init
+    (projectile-mode +1)
+    :bind (:map projectile-mode-map
+                ("C-c p" . projectile-command-map)))
+
 #+end_src
 
 ** Magit
@@ -224,7 +266,10 @@ Auto-completion pop-ups with icons!
 
 #+begin_src emacs-lisp
 
-  (use-package magit)
+  (use-package magit
+    :config
+    (define-key evil-normal-state-map (kbd "C-c g")  'magit)
+    )
 
   ;; Add git annotations to the side
   (use-package git-gutter-fringe
@@ -257,6 +302,7 @@ Auto-completion pop-ups with icons!
   (use-package tree-sitter-langs)
 #+end_src
 
+
 * Terminals
 ** eshell
 eshell is emacs builtin shell its intergrated well in emacs and every command is builtin with emacs functions
@@ -287,56 +333,28 @@ eshell is emacs builtin shell its intergrated well in emacs and every command is
 #+end_src
  
 
-* Keybinding Configuration
-
-This configuration uses [[https://evil.readthedocs.io/en/latest/index.html][evil-mode]] for a Vi-like modal editing experience.  [[https://github.com/noctuid/general.el][general.el]] is used for easy keybinding configuration that integrates well with which-key.  [[https://github.com/emacs-evil/evil-collection][evil-collection]] is used to automatically configure various Emacs modes with Vi-like keybindings for evil-mode.
-
-#+begin_src emacs-lisp
-
-  ;; Make ESC quit prompts
-  (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
-
-  (cua-mode t)
-
-  (use-package evil
-    :init 
-    (setq evil-want-integration t)
-    (setq evil-want-keybinding nil)
-    (setq evil-undo-system 'undo-tree)
-    (setq evil-want-C-u-scroll t)
-    :config
-    (evil-mode 1)
-    (define-key evil-insert-state-map (kbd "C-c") 'cua-copy-region)
-    (define-key evil-insert-state-map (kbd "C-v") 'cua-paste)
-    (define-key evil-insert-state-map (kbd "C-x") 'cua-cut-region)
-    (define-key evil-insert-state-map (kbd "C-z") 'undo-tree-undo)
-    (define-key evil-insert-state-map (kbd "C-y") 'undo-tree-redo)
-    (evil-global-set-key 'motion "j" 'evil-next-visual-line)
-    (evil-global-set-key 'motion "k" 'evil-previous-visual-line))
-
-  (use-package evil-collection
-    :init (evil-collection-init))
-
-  (use-package evil-commentary
-    :init (evil-commentary-mode))
-
-  (use-package evil-surround
-    :ensure t
-    :config
-    (global-evil-surround-mode 1))
-
-#+end_src
-
-
 * UI Configuration
 
 ** Color Theme
 
-
 #+begin_src emacs-lisp
-        (use-package zenburn-theme
-        :config
-        (load-theme 'zenburn t))
+
+  ;; (use-package zenburn-theme
+  ;; :config
+  ;; (load-theme 'zenburn t))
+  (use-package doom-themes
+    :ensure t
+    :config
+    ;; Global settings (defaults)
+
+    (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+          doom-themes-enable-italic t) ; if nil, italics is universally disabled
+
+    (load-theme 'doom-gruvbox t)
+
+    ;; Corrects (and improves) org-mode's native fontification.
+    (doom-themes-org-config))
+
 
 #+end_src
 
@@ -515,6 +533,7 @@ We use undo-tree to have a good undot system for emacs similar to that for vim
     (setq undo-tree-history-directory-alist '(("." . "~/.emacs.d/undo"))))
 #+end_src
 
+
 * Dired
 
 Dired is a built-in file manager for Emacs that does some pretty amazing things!  Here are some key bindings you should try out:
@@ -597,7 +616,3 @@ Dired is a built-in file manager for Emacs that does some pretty amazing things!
 
 #+end_src
  
-
-* END
-
-
