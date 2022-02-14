@@ -97,6 +97,23 @@ set a default directory to put all the backup and auto-save files and stop use-p
 
 
 * Basic UI Configuration
+
+** modeline
+
+using the good doom modeline
+
+#+begin_src emacs-lisp
+
+  (use-package doom-modeline
+    :ensure t
+    :init (doom-modeline-mode 1))
+
+#+end_src
+
+
+
+** beautify
+
 This section configures basic UI settings that remove unneeded elements to make Emacs look a lot more minimal and modern.  
 
 #+begin_src emacs-lisp
@@ -152,14 +169,13 @@ This configuration uses [[https://evil.readthedocs.io/en/latest/index.html][evil
     (setq evil-want-C-u-scroll t)
     :config
     (evil-mode 1)
+    (evil-global-set-key 'motion "j" 'evil-next-visual-line)
+    (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
     (define-key evil-insert-state-map (kbd "C-c") 'cua-copy-region)
     (define-key evil-insert-state-map (kbd "C-v") 'cua-paste)
     (define-key evil-insert-state-map (kbd "C-x") 'cua-cut-region)
     (define-key evil-insert-state-map (kbd "C-z") 'undo-tree-undo)
-    (define-key evil-insert-state-map (kbd "C-y") 'undo-tree-redo)
-    (evil-global-set-key 'motion "j" 'evil-next-visual-line)
-    (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
-    )
+    (define-key evil-insert-state-map (kbd "C-y") 'undo-tree-redo))
 
   (use-package evil-collection
     :init (evil-collection-init))
@@ -180,12 +196,19 @@ This configuration uses [[https://evil.readthedocs.io/en/latest/index.html][evil
 
 #+begin_src emacs-lisp
 
+  ;; (setq lsp-prefer-flymake nil)
+  (setq lsp-headerline-breadcrumb-enable nil)
+
   (use-package lsp-mode
     :init (setq lsp-keymap-prefix "C-c l")
+    (setq lsp-headerline-breadcrumb-enable nil)
     :hook
-    ( (lsp-mode . lsp-enable-which-key-integration))
-    :commands (lsp lsp-deferred))
+    (lsp-mode . lsp-enable-which-key-integration)
+    :commands (lsp lsp-deferred)
+    :config
+    (setq lsp-headerline-breadcrumb-enable nil))
 
+  (setq lsp-headerline-breadcrumb-enable nil)
   (use-package lsp-ui :commands lsp-ui-mode)
   (use-package dap-mode)
 
@@ -201,7 +224,7 @@ c / c++ support
             (lambda () (setq-local c-basic-offset 4
                                    indent-tabs-mode t
                                    tab-width  4)))
-  (add-hook 'c-mode-hook #'lsp-deferred)
+  ;; (add-hook 'c-mode-hook #'lsp-deferred)
 
 #+end_src
 
@@ -233,8 +256,8 @@ Auto-completion pop-ups with icons!
 #+begin_src emacs-lisp
 
   (use-package company
-    :after lsp-mode
-    :hook (lsp-mode . company-mode)
+    :init (global-company-mode)
+    (setq company-global-modes '(not org-mode))
     :bind (:map company-active-map
                 ("<tab>" . company-complete-selection))
     (:map lsp-mode-map
