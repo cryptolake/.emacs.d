@@ -125,7 +125,7 @@ This section configures basic UI settings that remove unneeded elements to make 
   (tooltip-mode -1) ; Disable tooltips
   (set-fringe-mode 10) ; Give some room
 
-  ;; (menu-bar-mode -1) ; Disable menu bar
+ (menu-bar-mode -1) ; Disable menu bar
 
   (column-number-mode)
   (global-display-line-numbers-mode t)
@@ -146,47 +146,108 @@ Using Hack font here you can install it in archlinux with the command *pacman -S
 #+begin_src emacs-lisp
 
   (set-face-attribute 'default nil :font "Hack" :height 120)
-
+  (use-package lsp-pyright
+    :ensure t
+    :hook (python-mode . (lambda ()
+                           (require 'lsp-pyright)
+                           (lsp))))  ; or lsp-deferre
 #+end_src
 
 
 * Keybinding Configuration
 
-This configuration uses [[https://evil.readthedocs.io/en/latest/index.html][evil-mode]] for a Vi-like modal editing experience.  [[https://github.com/emacs-evil/evil-collection][evil-collection]] is used to automatically configure various Emacs modes with Vi-like keybindings for evil-mode.
+Meow for cool modal editing
 
 #+begin_src emacs-lisp
+  (defun meow-setup ()
+    (setq meow-cheatsheet-layout meow-cheatsheet-layout-qwerty)
+    (meow-motion-overwrite-define-key
+     '("j" . meow-next)
+     '("k" . meow-prev)
+     '("<escape>" . ignore))
+    (meow-leader-define-key
+     ;; SPC j/k will run the original command in MOTION state.
+     '("j" . "H-j")
+     '("k" . "H-k")
+     ;; Use SPC (0-9) for digit arguments.
+     '("1" . meow-digit-argument)
+     '("2" . meow-digit-argument)
+     '("3" . meow-digit-argument)
+     '("4" . meow-digit-argument)
+     '("5" . meow-digit-argument)
+     '("6" . meow-digit-argument)
+     '("7" . meow-digit-argument)
+     '("8" . meow-digit-argument)
+     '("9" . meow-digit-argument)
+     '("0" . meow-digit-argument)
+     '("/" . meow-keypad-describe-key)
+     '("?" . meow-cheatsheet))
+    (meow-normal-define-key
+     '("0" . meow-expand-0)
+     '("9" . meow-expand-9)
+     '("8" . meow-expand-8)
+     '("7" . meow-expand-7)
+     '("6" . meow-expand-6)
+     '("5" . meow-expand-5)
+     '("4" . meow-expand-4)
+     '("3" . meow-expand-3)
+     '("2" . meow-expand-2)
+     '("1" . meow-expand-1)
+     '("-" . negative-argument)
+     '(";" . meow-reverse)
+     '("," . meow-inner-of-thing)
+     '("." . meow-bounds-of-thing)
+     '("[" . meow-beginning-of-thing)
+     '("]" . meow-end-of-thing)
+     '("a" . meow-append)
+     '("A" . meow-open-below)
+     '("b" . meow-back-word)
+     '("B" . meow-back-symbol)
+     '("c" . meow-change)
+     '("d" . meow-delete)
+     '("D" . meow-backward-delete)
+     '("e" . meow-next-word)
+     '("E" . meow-next-symbol)
+     '("f" . meow-find)
+     '("g" . meow-cancel-selection)
+     '("G" . meow-grab)
+     '("h" . meow-left)
+     '("H" . meow-left-expand)
+     '("i" . meow-insert)
+     '("I" . meow-open-above)
+     '("j" . meow-next)
+     '("J" . meow-next-expand)
+     '("k" . meow-prev)
+     '("K" . meow-prev-expand)
+     '("l" . meow-right)
+     '("L" . meow-right-expand)
+     '("m" . meow-join)
+     '("n" . meow-search)
+     '("o" . meow-block)
+     '("O" . meow-to-block)
+     '("p" . meow-yank)
+     '("q" . meow-quit)
+     '("Q" . meow-goto-line)
+     '("r" . meow-replace)
+     '("R" . meow-swap-grab)
+     '("s" . meow-kill)
+     '("t" . meow-till)
+     '("u" . meow-undo)
+     '("U" . meow-undo-in-selection)
+     '("v" . meow-visit)
+     '("w" . meow-mark-word)
+     '("W" . meow-mark-symbol)
+     '("x" . meow-line)
+     '("X" . meow-goto-line)
+     '("y" . meow-save)
+     '("Y" . meow-sync-grab)
+     '("z" . meow-pop-selection)
+     '("'" . repeat)
+     '("<escape>" . ignore)))
 
-  ;; Make ESC quit prompts
-  (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
-
-  (cua-mode t)
-
-  (use-package evil
-    :init 
-    (setq evil-want-integration t)
-    (setq evil-want-keybinding nil)
-    (setq evil-undo-system 'undo-tree)
-    (setq evil-want-C-u-scroll t)
-    :config
-    (evil-mode 1)
-    (evil-global-set-key 'motion "j" 'evil-next-visual-line)
-    (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
-    (define-key evil-insert-state-map (kbd "C-c") 'cua-copy-region)
-    (define-key evil-insert-state-map (kbd "C-v") 'cua-paste)
-    (define-key evil-insert-state-map (kbd "C-x") 'cua-cut-region)
-    (define-key evil-insert-state-map (kbd "C-z") 'undo-tree-undo)
-    (define-key evil-insert-state-map (kbd "C-y") 'undo-tree-redo))
-
-  (use-package evil-collection
-    :init (evil-collection-init))
-
-  (use-package evil-commentary
-    :init (evil-commentary-mode))
-
-  (use-package evil-surround
-    :ensure t
-    :config
-    (global-evil-surround-mode 1))
+  (use-package meow
+    :init (meow-setup)
+    (meow-global-mode 1))
 
 #+end_src
 
@@ -233,7 +294,7 @@ Python language support
 
 #+begin_src emacs-lisp
 
-  ;; (add-hook 'python-mode-hook #'lsp-deferred)
+(add-hook 'python-mode-hook #'lsp-deferred)
 
 #+end_src
 
@@ -289,12 +350,9 @@ Auto-completion pop-ups with icons!
 
 #+begin_src emacs-lisp
 
-  (use-package magit
-    :config
-    (define-key evil-normal-state-map (kbd "C-c g")  'magit)
-    )
+  (use-package magit)
 
-  ;; Add git annotations to the side
+  ;; Add git  to the side
   (use-package git-gutter-fringe
     :init
     (global-git-gutter-mode t))
@@ -337,9 +395,6 @@ eshell is emacs builtin shell its intergrated well in emacs and every command is
 
     ;; Truncate buffer for performance
     (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffer)
-
-    ;; Bind some useful keys for evil-mode
-    (evil-normalize-keymaps)
 
     (setq eshell-history-size         10000
           eshell-buffer-maximum-lines 10000
@@ -544,80 +599,9 @@ Center Org buffers for better readability
 #+end_src
 
 
-* Undo system
-** Undo-tree
-We use undo-tree to have a good undot system for emacs similar to that for vim
-#+begin_src emacs-lisp
-  (use-package undo-tree
-    :init
-    (global-undo-tree-mode 1)
-    :config
-    (setq undo-tree-auto-save-history t)
-    (setq undo-tree-history-directory-alist '(("." . "~/.emacs.d/undo"))))
-#+end_src
-
-
 * Dired
 
 Dired is a built-in file manager for Emacs that does some pretty amazing things!  Here are some key bindings you should try out:
-
-** Key Bindings
-
-*** Navigation
-
-*Emacs* / *Evil*
-- =n= / =j= - next line
-- =p= / =k= - previous line
-- =j= / =J= - jump to file in buffer
-- =RET= - select file or directory
-- =^= - go to parent directory
-- =S-RET= / =g O= - Open file in "other" window
-- =M-RET= - Show file in other window without focusing (previewing files)
-- =g o= (=dired-view-file=) - Open file but in a "preview" mode, close with =q=
-- =g= / =g r= Refresh the buffer with =revert-buffer= after changing configuration (and after filesystem changes!)
-
-*** Marking files
-
-- =m= - Marks a file
-- =u= - Unmarks a file
-- =U= - Unmarks all files in buffer
-- =* t= / =t= - Inverts marked files in buffer
-- =% m= - Mark files in buffer using regular expression
-- =*= - Lots of other auto-marking functions
-- =k= / =K= - "Kill" marked items (refresh buffer with =g= / =g r= to get them back)
-- Many operations can be done on a single file if there are no active marks!
- 
-*** Copying and Renaming files
-
-- =C= - Copy marked files (or if no files are marked, the current file)
-- Copying single and multiple files
-- =U= - Unmark all files in buffer
-- =R= - Rename marked files, renaming multiple is a move!
-- =% R= - Rename based on regular expression: =^test= , =old-\&=
-
-*Power command*: =C-x C-q= (=dired-toggle-read-only=) - Makes all file names in the buffer editable directly to rename them!  Press =Z Z= to confirm renaming or =Z Q= to abort.
-
-*** Deleting files
-
-- =D= - Delete marked file
-- =d= - Mark file for deletion
-- =x= - Execute deletion for marks
-- =delete-by-moving-to-trash= - Move to trash instead of deleting permanently
-
-*** Creating and extracting archives
-
-- =Z= - Compress or uncompress a file or folder to (=.tar.gz=)
-- =c= - Compress selection to a specific file
-- =dired-compress-files-alist= - Bind compression commands to file extension
-
-*** Other common operations
-
-- =T= - Touch (change timestamp)
-- =M= - Change file mode
-- =O= - Change file owner
-- =G= - Change file group
-- =S= - Create a symbolic link to this file
-- =L= - Load an Emacs Lisp file into Emacs
 
 ** Configuration
 
@@ -626,11 +610,7 @@ Dired is a built-in file manager for Emacs that does some pretty amazing things!
   (use-package dired
     :ensure nil
     :commands (dired dired-jump)
-    :custom ((dired-listing-switches "-agho --group-directories-first"))
-    :config
-    (evil-collection-define-key 'normal 'dired-mode-map
-      "h" 'dired-single-up-directory
-      "l" 'dired-single-buffer))
+    :custom ((dired-listing-switches "-agho --group-directories-first")))
 
   (use-package dired-single)
 
