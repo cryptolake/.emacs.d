@@ -168,6 +168,15 @@
 	     (company-minimum-prefix-length 1)
 	     (company-idle-delay 0.0))
 
+(defun text-mode-hook-setup ()
+  ;; make `company-backends' local is critcal
+  ;; or else, you will have completion in every major mode, that's very annoying!
+  (make-local-variable 'company-backends)
+
+  ;; company-ispell is the plugin to complete words
+  (add-to-list 'company-backends 'company-ispell))
+
+(add-hook 'text-mode-hook 'text-mode-hook-setup)
 
 (use-package magit)
 
@@ -199,11 +208,6 @@
 
 	     (with-eval-after-load 'esh-opt
 				   (setq eshell-destroy-buffer-when-process-dies t)))
-
-(use-package zenburn-theme
-:config
-(load-theme 'zenburn t))
-
 
 (use-package which-key
 	     :init (which-key-mode)
@@ -342,6 +346,12 @@
   :hook (python-mode . (lambda ()
                           (require 'lsp-pyright)
                           (lsp))))  ; or lsp-deferred
+
+(setq lsp-pyright-use-library-code-for-types nil) ;; set this to nil if getting too many false positive type errors
+(setq lsp-pyright-stub-path (concat (getenv "HOME") "/src/python-type-stubs")) ;; example
+(setq lsp-pyright-auto-import-completions nil)
+(setq lsp-pyright-typechecking-mode "basic")
+
 (use-package pyvenv
   :ensure t
   :init
@@ -358,7 +368,7 @@
   ;; Global settings (defaults)
   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
         doom-themes-enable-italic t) ; if nil, italics is universally disabled
-  (load-theme 'doom-gruvbox t)
+  (load-theme 'doom-one t)
 
   ;; Enable flashing mode-line on errors
   (doom-themes-visual-bell-config)
