@@ -159,6 +159,9 @@
 (meow-setup)
 (meow-global-mode 1)
 
+(use-package undo-tree
+  :init (global-undo-tree-mode))
+
 (use-package company
 	     :init (global-company-mode)
 	     (setq company-global-modes '(not org-mode))
@@ -357,7 +360,7 @@
   :init
   (setenv "WORKON_HOME" "~/.pyenv/versions")
   (add-hook 'python-mode-hook #'pyvenv-mode))
-
+(use-package ein)
 (use-package treemacs
   :ensure t
   :defer t)
@@ -368,18 +371,18 @@
   ;; Global settings (defaults)
   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
         doom-themes-enable-italic t) ; if nil, italics is universally disabled
-  (load-theme 'doom-one t)
+  (load-theme 'doom-gruvbox t)
 
   ;; Enable flashing mode-line on errors
   (doom-themes-visual-bell-config)
   ;; Enable custom neotree theme (all-the-icons must be installed!)
   (doom-themes-neotree-config)
   ;; or for treemacs users
-  (setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
+  (setq doom-themes-treemacs-theme "doom-gruvbox") ; use "doom-colors" for less minimal icon theme
   (doom-themes-treemacs-config)
   ;; Corrects (and improves) org-mode's native fontification.
   (doom-themes-org-config))
-
+(add-to-list 'default-frame-alist '(alpha-background . 95)) ; For all new frames henceforth
 ;; Debugging support
 (setq dap-auto-configure-features '(sessions locals controls tooltip))
 
@@ -387,3 +390,8 @@
 (global-tree-sitter-mode)
 (add-hook 'tree-sitter-after-on-hook #'tree-sitter-hl-mode)
 
+
+;; smart parens
+(use-package smartparens
+  :init (show-smartparens-global-mode)
+  :config (require 'smartparens-config))
