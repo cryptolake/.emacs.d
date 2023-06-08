@@ -79,8 +79,9 @@
 (set-face-attribute 'default nil :font "Hack" :height 120)
 
 (use-package undo-tree
-  :init (global-undo-tree-mode))
-
+  :init (global-undo-tree-mode)
+  :config
+  (setq undo-tree-history-directory-alist '(("." . "~/.emacs.d/backup/"))))
 
 (setq evil-want-keybinding 'nil)
 
@@ -110,6 +111,10 @@
 
 (add-hook 'evil-normal-state-entry-hook #'enable-translation)
 (add-hook 'evil-normal-state-exit-hook #'disable-translation)
+
+(add-hook 'minibuffer-setup-hook #'disable-translation)
+(add-hook 'minibuffer-exit-hook #'enable-translation)
+
 
 (evil-set-undo-system 'undo-tree)
 
@@ -282,7 +287,6 @@
 (use-package docker
   :defer t)
 
-
 (use-package lsp-mode
   :init
   ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
@@ -302,13 +306,6 @@
 (setq lsp-pyright-use-library-code-for-types nil) ;; set this to nil if getting too many false positive type errors
 (setq lsp-pyright-stub-path (concat (getenv "HOME") "/src/python-type-stubs")) ;; example
 (setq lsp-pyright-auto-import-completions nil)
-(setq lsp-pyright-typechecking-mode "basic")
-
-(use-package pyvenv
-  
-  :init
-  (setenv "WORKON_HOME" "~/.pyenv/versions")
-  (add-hook 'python-mode-hook #'pyvenv-mode))
 
 (use-package conda
   :init
