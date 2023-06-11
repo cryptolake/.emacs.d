@@ -73,7 +73,8 @@
 (dolist (mode '(org-mode-hook
 		term-mode-hook
 		shell-mode-hook
-		eshell-mode-hook))
+		eshell-mode-hook
+		pdf-view-mode-hook))
   (add-hook mode (lambda () (display-line-numbers-mode 0))))
 
 (set-face-attribute 'default nil :font "Hack" :height 120)
@@ -97,6 +98,16 @@
 
 (use-package evil-collection
   :init (evil-collection-init))
+
+(use-package evil-owl
+  :config
+  (setq evil-owl-max-string-length 500)
+  (add-to-list 'display-buffer-alist
+               '("*evil-owl*"
+                 (display-buffer-in-side-window)
+                 (side . bottom)
+                 (window-height . 0.3)))
+  (evil-owl-mode))
 
 ;; THE BEST ELISP EVER
 
@@ -153,6 +164,9 @@
 (add-hook 'evil-normal-state-entry-hook #'enable-translation)
 (add-hook 'evil-normal-state-exit-hook #'disable-translation)
 
+(add-hook 'evil-visual-state-entry-hook #'enable-translation)
+(add-hook 'evil-visual-state-exit-hook #'disable-translation)
+
 (add-hook 'evil-motion-state-entry-hook #'enable-translation)
 (add-hook 'evil-motion-state-exit-hook #'disable-translation)
 
@@ -167,11 +181,11 @@
 
 (use-package company
   :init (global-company-mode)
-  (setq company-global-modes '(not org-mode))
+  ;; (setq company-global-modes '(not org-mode))
   :bind (:map company-active-map
 	      ("<tab>" . company-complete-selection))
   :custom
-  (company-minimum-prefix-length 1)
+  (company-minimum-prefix-length 3)
   (company-idle-delay 0.0))
 
 (defun text-mode-hook-setup ()
@@ -183,6 +197,7 @@
   (add-to-list 'company-backends 'company-ispell))
 
 (add-hook 'text-mode-hook 'text-mode-hook-setup)
+(add-hook 'org-mode-hook 'text-mode-hook-setup)
 
 (use-package magit)
 
@@ -309,25 +324,13 @@
   :custom ((dired-listing-switches "-agho --group-directories-first")))
 
 (use-package dired-single)
+
 (use-package all-the-icons
   :if (display-graphic-p))
+
 (use-package all-the-icons-dired
   :hook (dired-mode . all-the-icons-dired-mode))
 
-(setq wl-copy-process nil)
-(defun wl-copy (text)
-  (setq wl-copy-process (make-process :name "wl-copy"
-                                      :buffer nil
-                                      :command '("wl-copy" "-f" "-n")
-                                      :connection-type 'pipe))
-  (process-send-string wl-copy-process text)
-  (process-send-eof wl-copy-process))
-(defun wl-paste ()
-  (if (and wl-copy-process (process-live-p wl-copy-process))
-      nil ; should return nil if we're the current paste owner
-    (shell-command-to-string "wl-paste -n | tr -d \r")))
-(setq interprogram-cut-function 'wl-copy)
-(setq interprogram-paste-function 'wl-paste)
 (use-package flycheck
   :init (global-flycheck-mode))
 
@@ -371,18 +374,23 @@
   ;; Global settings (defaults)
   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
         doom-themes-enable-italic t) ; if nil, italics is universally disabled
-  (load-theme 'doom-gruvbox t)
+  (load-theme 'doom-tokyo-night t)
 
   ;; Enable flashing mode-line on errors
   (doom-themes-visual-bell-config)
   ;; Enable custom neotree theme (all-the-icons must be installed!)
   (doom-themes-neotree-config)
   ;; or for treemacs users
-  (setq doom-themes-treemacs-theme "doom-gruvbox") ; use "doom-colors" for less minimal icon theme
+  (setq doom-themes-treemacs-theme "doom-tokyo-night") ; use "doom-colors" for less minimal icon theme
   (doom-themes-treemacs-config)
   ;; Corrects (and improves) org-mode's native fontification.
   (doom-themes-org-config))
 (add-to-list 'default-frame-alist '(alpha-background . 95)) ; For all new frames henceforth
+
+(use-package doom-modeline
+  :ensure t
+  :init (doom-modeline-mode 1))
+
 ;; Debugging support
 (setq dap-auto-configure-features '(sessions locals controls tooltip))
 
@@ -397,3 +405,21 @@
 
 (custom-set-variables
  '(markdown-command "/usr/bin/pandoc"))
+
+;; pdf tools
+(use-package pdf-tools
+   :config
+   (pdf-tools-install)
+   (setq-default pdf-view-display-size 'fit-width)
+   (define-key pdf-view-mode-map (kbd "C-s") 'isearch-forward)
+   :custom
+   (pdf-annot-activate-created-annotations t "automatically annotate highlights"))
+
+(setq TeX-view-program-selection '((output-pdf "PDF Tools"))
+      TeX-view-program-list '(("PDF Tools" TeX-pdf-tools-sync-view))
+      TeX-source-correlate-start-server t)
+
+(add-hook 'TeX-after-compilation-finished-functions
+          #'TeX-revert-document-buffer)
+
+(add-hook 'pdf-view-mode-hook (lambda() (linum-mode -1)))
