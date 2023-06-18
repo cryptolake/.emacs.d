@@ -176,6 +176,8 @@
 (add-hook 'isearch-mode-hook #'disable-translation)
 (add-hook 'isearch-mode-end-hook #'enable-translation)
 
+(evil-global-set-key 'normal (kbd "[d") 'flycheck-previous-error)
+(evil-global-set-key 'normal (kbd "]d") 'flycheck-next-error)
 
 (evil-set-undo-system 'undo-tree)
 
@@ -423,3 +425,13 @@
           #'TeX-revert-document-buffer)
 
 (add-hook 'pdf-view-mode-hook (lambda() (linum-mode -1)))
+
+(defun crypto/so-long()
+  (setq-default bidi-paragraph-direction 'left-to-right)
+  (setq bidi-inhibit-bpa t)
+  )
+
+
+(global-so-long-mode 1)
+(add-hook 'so-long-hook #'crypto/so-long)
+;;;
