@@ -376,21 +376,20 @@
   ;; Global settings (defaults)
   (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
         doom-themes-enable-italic t) ; if nil, italics is universally disabled
-  (load-theme 'doom-tokyo-night t)
+  (load-theme 'doom-gruvbox t)
 
   ;; Enable flashing mode-line on errors
   (doom-themes-visual-bell-config)
   ;; Enable custom neotree theme (all-the-icons must be installed!)
   (doom-themes-neotree-config)
   ;; or for treemacs users
-  (setq doom-themes-treemacs-theme "doom-tokyo-night") ; use "doom-colors" for less minimal icon theme
+  (setq doom-themes-treemacs-theme "doom-gruvbox") ; use "doom-colors" for less minimal icon theme
   (doom-themes-treemacs-config)
   ;; Corrects (and improves) org-mode's native fontification.
   (doom-themes-org-config))
 (add-to-list 'default-frame-alist '(alpha-background . 95)) ; For all new frames henceforth
 
 (use-package doom-modeline
-  :ensure t
   :init (doom-modeline-mode 1))
 
 ;; Debugging support
@@ -434,4 +433,16 @@
 
 (global-so-long-mode 1)
 (add-hook 'so-long-hook #'crypto/so-long)
+
+
+(use-package yaml-mode)
+(use-package yaml-pro)
+
+;; js/ts Development
+(use-package typescript-mode
+  :config
+ (add-hook 'typescript-mode-hook 'lsp-deferred)
+ (add-hook 'javascript-mode-hook 'lsp-deferred)
+ )
+
 ;;;
