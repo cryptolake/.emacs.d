@@ -445,4 +445,7 @@
  (add-hook 'javascript-mode-hook 'lsp-deferred)
  )
 
+(use-package nix-mode
+  :mode "\\.nix\\'")
+
 ;;;
