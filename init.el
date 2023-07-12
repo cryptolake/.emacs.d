@@ -109,72 +109,70 @@
                  (window-height . 0.3)))
   (evil-owl-mode))
 
-;; THE BEST ELISP EVER
+;; (defun enable-translation ()
+;;   "Enable key translation."
+;;   (define-key key-translation-map (kbd "SPC") 'event-apply-control-modifier))
 
-(defun enable-translation ()
-  "Enable key translation."
-  (define-key key-translation-map (kbd "SPC") 'event-apply-control-modifier))
+;; (defun disable-translation ()
+;;   "Disable key translation."
+;;   (define-key key-translation-map (kbd "SPC") nil))
 
-(defun disable-translation ()
-  "Disable key translation."
-  (define-key key-translation-map (kbd "SPC") nil))
+;; (defun my-evil-find-char ()
+;;   "Find char with SPC as char."
+;;   (interactive)
+;;   (disable-translation)
+;;   (call-interactively #'evil-find-char)
+;;   (enable-translation))
 
-(defun my-evil-find-char ()
-  "Find char with SPC as char."
-  (interactive)
-  (disable-translation)
-  (call-interactively #'evil-find-char)
-  (enable-translation))
-
-(defun my-evil-find-char-backwards ()
-  "Find char with SPC as char."
-  (interactive)
-  (disable-translation)
-  (call-interactively #'evil-find-char-backward)
-  (enable-translation))
+;; (defun my-evil-find-char-backwards ()
+;;   "Find char with SPC as char."
+;;   (interactive)
+;;   (disable-translation)
+;;   (call-interactively #'evil-find-char-backward)
+;;   (enable-translation))
   
-(defun my-evil-find-char-to ()
-  "Find char with SPC as char."
-  (interactive)
-  (disable-translation)
-  (call-interactively #'evil-find-char-to)
-  (enable-translation))
+;; (defun my-evil-find-char-to ()
+;;   "Find char with SPC as char."
+;;   (interactive)
+;;   (disable-translation)
+;;   (call-interactively #'evil-find-char-to)
+;;   (enable-translation))
 
 
-(defun my-evil-find-char-to-backward ()
-  "Find char with SPC as char."
-  (interactive)
-  (disable-translation)
-  (call-interactively #'evil-find-char-to-backward)
-  (enable-translation))
+;; (defun my-evil-find-char-to-backward ()
+;;   "Find char with SPC as char."
+;;   (interactive)
+;;   (disable-translation)
+;;   (call-interactively #'evil-find-char-to-backward)
+;;   (enable-translation))
 
-(defun my-evil-replace ()
-  "Find char with SPC as char."
-  (interactive)
-  (disable-translation)
-  (call-interactively #'evil-replace)
-  (enable-translation))
+;; (defun my-evil-replace ()
+;;   "Find char with SPC as char."
+;;   (interactive)
+;;   (disable-translation)
+;;   (call-interactively #'evil-replace)
+;;   (enable-translation))
 
-(evil-global-set-key 'normal (kbd "f") 'my-evil-find-char)
-(evil-global-set-key 'normal (kbd "F") 'my-evil-find-char-backwards)
-(evil-global-set-key 'normal (kbd "t") 'my-evil-find-char-to)
-(evil-global-set-key 'normal (kbd "T") 'my-evil-find-char-to-backward)
-(evil-global-set-key 'normal (kbd "r") 'my-evil-replace)
+;; (evil-global-set-key 'normal (kbd "f") 'my-evil-find-char)
+;; (evil-global-set-key 'normal (kbd "F") 'my-evil-find-char-backwards)
+;; (evil-global-set-key 'normal (kbd "t") 'my-evil-find-char-to)
+;; (evil-global-set-key 'normal (kbd "T") 'my-evil-find-char-to-backward)
+;; (evil-global-set-key 'normal (kbd "r") 'my-evil-replace)
 
-(add-hook 'evil-normal-state-entry-hook #'enable-translation)
-(add-hook 'evil-normal-state-exit-hook #'disable-translation)
+;; (add-hook 'evil-normal-state-entry-hook #'enable-translation)
+;; (add-hook 'evil-normal-state-exit-hook #'disable-translation)
 
-(add-hook 'evil-visual-state-entry-hook #'enable-translation)
-(add-hook 'evil-visual-state-exit-hook #'disable-translation)
+;; (add-hook 'evil-visual-state-entry-hook #'enable-translation)
+;; (add-hook 'evil-visual-state-exit-hook #'disable-translation)
 
-(add-hook 'evil-motion-state-entry-hook #'enable-translation)
-(add-hook 'evil-motion-state-exit-hook #'disable-translation)
+;; (add-hook 'evil-motion-state-entry-hook #'enable-translation)
+;; (add-hook 'evil-motion-state-exit-hook #'disable-translation)
 
-(add-hook 'minibuffer-setup-hook #'disable-translation)
-(add-hook 'minibuffer-exit-hook #'enable-translation)
+;; (add-hook 'minibuffer-setup-hook #'disable-translation)
+;; (add-hook 'minibuffer-exit-hook #'enable-translation)
 
-(add-hook 'isearch-mode-hook #'disable-translation)
-(add-hook 'isearch-mode-end-hook #'enable-translation)
+;; (add-hook 'isearch-mode-hook #'disable-translation)
+;; (add-hook 'isearch-mode-end-hook #'enable-translation)
 
 (evil-global-set-key 'normal (kbd "[d") 'flycheck-previous-error)
 (evil-global-set-key 'normal (kbd "]d") 'flycheck-next-error)
@@ -441,8 +439,8 @@
 ;; js/ts Development
 (use-package typescript-mode
   :config
- (add-hook 'typescript-mode-hook 'lsp-deferred)
- (add-hook 'javascript-mode-hook 'lsp-deferred)
+ (add-hook 'typescript-mode-hook 'lsp)
+ (add-hook 'javascript-mode-hook 'lsp)
  )
 
 (use-package nix-mode
