@@ -109,70 +109,45 @@
                  (window-height . 0.3)))
   (evil-owl-mode))
 
-;; (defun enable-translation ()
-;;   "Enable key translation."
-;;   (define-key key-translation-map (kbd "SPC") 'event-apply-control-modifier))
 
-;; (defun disable-translation ()
-;;   "Disable key translation."
-;;   (define-key key-translation-map (kbd "SPC") nil))
+(use-package general
+:after which-key
+:config
+(general-override-mode 1))
 
-;; (defun my-evil-find-char ()
-;;   "Find char with SPC as char."
-;;   (interactive)
-;;   (disable-translation)
-;;   (call-interactively #'evil-find-char)
-;;   (enable-translation))
+(general-create-definer tyrant-def-1
+:states '(normal visual insert motion emacs)
+:prefix "SPC"
+:non-normal-prefix "C-SPC")
 
-;; (defun my-evil-find-char-backwards ()
-;;   "Find char with SPC as char."
-;;   (interactive)
-;;   (disable-translation)
-;;   (call-interactively #'evil-find-char-backward)
-;;   (enable-translation))
-  
-;; (defun my-evil-find-char-to ()
-;;   "Find char with SPC as char."
-;;   (interactive)
-;;   (disable-translation)
-;;   (call-interactively #'evil-find-char-to)
-;;   (enable-translation))
+(tyrant-def-1
+""     nil
+"c"   (general-simulate-key "C-c")
+"h"   (general-simulate-key "C-h")
+"x"   (general-simulate-key "C-x")
+"w"   (general-simulate-key "C-w")
+"p"   (general-simulate-key "C-x p")
+"SPC"   (general-simulate-key "M-x")
 
+;; files
+"f" 'find-file
 
-;; (defun my-evil-find-char-to-backward ()
-;;   "Find char with SPC as char."
-;;   (interactive)
-;;   (disable-translation)
-;;   (call-interactively #'evil-find-char-to-backward)
-;;   (enable-translation))
+;; Package manager
+"lp"  'list-packages
 
-;; (defun my-evil-replace ()
-;;   "Find char with SPC as char."
-;;   (interactive)
-;;   (disable-translation)
-;;   (call-interactively #'evil-replace)
-;;   (enable-translation))
+;; Quit operations
+"q"	'(:ignore t :which-key "quit emacs")
+"qq"  'kill-emacs
+"qz"  'delete-frame
 
-;; (evil-global-set-key 'normal (kbd "f") 'my-evil-find-char)
-;; (evil-global-set-key 'normal (kbd "F") 'my-evil-find-char-backwards)
-;; (evil-global-set-key 'normal (kbd "t") 'my-evil-find-char-to)
-;; (evil-global-set-key 'normal (kbd "T") 'my-evil-find-char-to-backward)
-;; (evil-global-set-key 'normal (kbd "r") 'my-evil-replace)
-
-;; (add-hook 'evil-normal-state-entry-hook #'enable-translation)
-;; (add-hook 'evil-normal-state-exit-hook #'disable-translation)
-
-;; (add-hook 'evil-visual-state-entry-hook #'enable-translation)
-;; (add-hook 'evil-visual-state-exit-hook #'disable-translation)
-
-;; (add-hook 'evil-motion-state-entry-hook #'enable-translation)
-;; (add-hook 'evil-motion-state-exit-hook #'disable-translation)
-
-;; (add-hook 'minibuffer-setup-hook #'disable-translation)
-;; (add-hook 'minibuffer-exit-hook #'enable-translation)
-
-;; (add-hook 'isearch-mode-hook #'disable-translation)
-;; (add-hook 'isearch-mode-end-hook #'enable-translation)
+;; Buffer operations
+"b"   '(:ignore t :which-key "buffer")
+"bb"  'mode-line-other-buffer
+"bd"  'kill-this-buffer
+"bD"  'vb/close-all-buffers
+"bq"  'kill-buffer-and-window
+"bR"  'rename-filand-buffer
+)
 
 (evil-global-set-key 'normal (kbd "[d") 'flycheck-previous-error)
 (evil-global-set-key 'normal (kbd "]d") 'flycheck-next-error)
@@ -428,10 +403,8 @@
   (setq bidi-inhibit-bpa t)
   )
 
-
 (global-so-long-mode 1)
 (add-hook 'so-long-hook #'crypto/so-long)
-
 
 (use-package yaml-mode)
 (use-package yaml-pro)
@@ -441,9 +414,17 @@
   :config
  (add-hook 'typescript-mode-hook 'lsp)
  (add-hook 'javascript-mode-hook 'lsp)
+ (add-hook 'js-mode-hook 'lsp)
  )
 
 (use-package nix-mode
   :mode "\\.nix\\'")
+
+(desktop-save-mode 1)
+
+;; tabs are evil
+(setq-default tab-width 2)
+(setq-default indent-tabs-mode nil)
+(setq-default c-basic-offset 2)
 
 ;;;
