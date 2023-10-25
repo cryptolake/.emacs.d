@@ -1,6 +1,6 @@
 * My special Emacs config
 
-This is my emacs config. it's practical and written using org-babel to start put ~Emacs.org~ in your ~.emacs.d~ and do ~M-x org-babel-tangle~.
+This is my emacs config. it's practical and written using org-babel to start put ~Config.org~ in your ~.emacs.d~ and do ~M-x org-babel-tangle~.
 
 * Motivation
 
