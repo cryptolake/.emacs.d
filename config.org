@@ -1,6 +1,6 @@
 #+Title: My emacs config
 #+Author: Dhia Dahmeni
-#+Date: 2023
+#+Date: 2024
 #+PROPERTY: header-args :tangle init.el
 
 * Required settings
@@ -9,7 +9,6 @@ These settings are the barebones to using emacs, they also don't require any pac
 #+BEGIN_SRC emacs-lisp
   (setq gc-cons-threshold (* 50 1000 1000))
   (setq ring-bell-function 'ignore)
-  (cua-mode t)
   (defun crypt/display-startup-time ()
     (message "Emacs loaded in %s with %d garbage collections."
              (format "%.2f seconds"
@@ -158,6 +157,12 @@ For package management I'm using straight.el
 
 #+end_src
 
+* Terminal
+best terminal around
+#+begin_src emacs-lisp
+  (use-package vterm)
+
+#+end_src
 * Undo
 Because the undo system in emacs sucks balls, i'm using undo-tree
 #+begin_src emacs-lisp
@@ -250,7 +255,7 @@ For auto completion i'm using company, there are none better
     :init (global-company-mode)
     ;; (setq company-global-modes '(not org-mode))
     :bind (:map company-active-map
-  	            ("<tab>" . company-complete-selection))
+  	            ("C-e" . company-complete-selection))
     :custom
     (company-minimum-prefix-length 3)
     (company-idle-delay 0.0))
@@ -265,6 +270,9 @@ For auto completion i'm using company, there are none better
 
   (add-hook 'text-mode-hook 'text-mode-hook-setup)
   (add-hook 'org-mode-hook 'text-mode-hook-setup)
+
+  (use-package company-box
+  :hook (company-mode . company-box-mode))
 
 #+end_src
 
@@ -432,14 +440,34 @@ I use flycheck for my error displaying need and format all to format files on de
 ** LSP language servers
 
 #+begin_src elisp
-  (use-package lsp-mode
-    :init
-    ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
-    (setq lsp-keymap-prefix "C-c l")
-    :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
-           ;; if you want which-key integration
-           (lsp-mode . lsp-enable-which-key-integration))
-    :commands lsp)
+      (use-package lsp-mode
+        :init
+        ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
+        :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
+        (lsp-mode . (lambda ()
+                          (let ((lsp-keymap-prefix "C-c l"))
+                            (lsp-enable-which-key-integration))))       ;; if you want which-key integration
+               (lsp-mode . lsp-enable-which-key-integration))
+        :commands lsp
+        :config
+        (define-key lsp-mode-map (kbd "C-c l") lsp-command-map)
+  )
+
+#+end_src
+
+** copilot
+
+#+begin_src elisp
+    (use-package copilot
+    :straight (:host github :repo "copilot-emacs/copilot.el" :files ("dist" "*.el"))
+  :hook
+  (prog-mode . copilot-mode)
+    :config
+    
+  (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
+  (define-key copilot-completion-map (kbd "TAB") 'copilot-accept-completion)
+    :ensure t)
+
 #+end_src
 
 ** Languages
@@ -462,8 +490,7 @@ I use flycheck for my error displaying need and format all to format files on de
                            (require 'lsp-pyright)
                            (lsp))))  ; or lsp-deferred
 
-  (setq lsp-pyright-use-library-code-for-types nil) ;; set this to nil if getting too many false positive type errors
-  (setq lsp-pyright-stub-path (concat (getenv "HOME") "/src/python-type-stubs")) ;; example
+  ;; (setq lsp-pyright-use-library-code-for-types nil) ;; set this to nil if getting too many false positive type errors
   (setq lsp-pyright-auto-import-completions nil)
 
   (use-package conda
@@ -495,6 +522,18 @@ I use flycheck for my error displaying need and format all to format files on de
   (use-package typescript-mode
     :config
     (add-hook 'web-mode-hook 'lsp))
+
+#+end_src
+
+*** Rust
+
+#+begin_src elisp
+
+   (use-package rust-mode
+  :hook
+  (rust-mode-hook . #'lsp)
+   :init
+  (setq rust-mode-treesitter-derive t))
 
 #+end_src
 
