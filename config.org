@@ -100,7 +100,7 @@ For package management I'm using straight.el
     ;; Global settings (defaults)
     (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
           doom-themes-enable-italic t) ; if nil, italics is universally disabled
-    (load-theme 'doom-gruvbox t)
+    (load-theme 'doom-tomorrow-night t)
 
     ;; Enable flashing mode-line on errors
     (doom-themes-visual-bell-config)
@@ -176,7 +176,9 @@ Because the undo system in emacs sucks balls, i'm using undo-tree
 
 #+begin_src emacs-lisp
 
+  (setq evil-want-C-u-scroll t)
   (setq evil-want-keybinding 'nil)
+
 
   (use-package evil
     :init (evil-mode 1))
@@ -207,10 +209,17 @@ Because the undo system in emacs sucks balls, i'm using undo-tree
     :config
     (general-override-mode 1))
 
+
   (general-create-definer tyrant-def-1
     :states '(normal visual insert motion emacs)
     :prefix "SPC"
     :non-normal-prefix "C-SPC")
+
+  (general-evil-setup t)
+  (general-nmap
+    :keymaps 'lsp-mode-map
+    :predicate 'lsp-mode
+    "K" 'lsp-ui-doc-show)
 
   (tyrant-def-1
     ""     nil
@@ -219,10 +228,18 @@ Because the undo system in emacs sucks balls, i'm using undo-tree
     "x"   (general-simulate-key "C-x")
     "w"   (general-simulate-key "C-w")
     "p"   (general-simulate-key "C-x p")
-    "SPC"   (general-simulate-key "C-x b")
+    "SPC"   'consult-buffer
 
-    ;; files
-    "f" 'find-file
+    ;; searching files by consult
+    "f"   '(:ignore t :which-key "files")
+    "ff"  'consult-find
+    ;; use ripgrep for searching
+    "fg"  'consult-ripgrep
+
+    ;; searching inside buffer
+    "s"   '(:ignore t :which-key "search")
+    "ss"  'consult-line
+    "sb"  'consult-buffer
 
     ;; Package manager
     "lp"  'list-packages
@@ -239,12 +256,55 @@ Because the undo system in emacs sucks balls, i'm using undo-tree
     "bD"  'vb/close-all-buffers
     "bq"  'kill-buffer-and-window
     "bR"  'rename-filand-buffer
+
+    "l"  '(:ignore t :which-key "lsp")
+    "lr" 'lsp-find-references
+    "ld" 'lsp-find-definition
+    "lh" 'lsp-describe-session
+    "ls" 'lsp-find-symbol
+    "lx" 'lsp-execute-code-action
+    "lR" 'lsp-restart-workspace
+    "lS" 'lsp-shutdown-workspace
+    "lD" 'lsp-find-declaration
+    "lF" 'lsp-find-type-definition
+    "lI" 'lsp-find-implementation
+    "lT" 'lsp-find-type-definition
+    "lU" 'lsp-find-references
+    "lW" 'lsp-organize-imports
+
+    "e" '(:ignore t :which-key "errors")
+    "en" 'flycheck-next-error
+    "ep" 'flycheck-previous-error
+    "el" 'flycheck-list-errors
+
+    "t" '(:ignore t :which-key "toggle")
+    "tt" 'treemacs
+    "td" 'dired
+    "tg" 'magit-status
+
+    "o" '(:ignore t :which-key "org")
+    "oa" 'org-agenda
+    "oc" 'org-capture
+    "ol" 'org-store-link
+    "os" 'org-schedule
+    "ot" 'org-todo
+    "or" 'org-refile
+
     )
 
-  (evil-global-set-key 'normal (kbd "[d") 'flycheck-previous-error)
+
+  ;; cycle through errors
   (evil-global-set-key 'normal (kbd "]d") 'flycheck-next-error)
+  (evil-global-set-key 'normal (kbd "[d") 'flycheck-previous-error)
+
+  (evil-global-set-key 'normal (kbd "C-u") 'evil-scroll-up)
+
+  ;; cycle through buffers
+  (evil-global-set-key 'normal (kbd "]b") 'next-buffer)
+  (evil-global-set-key 'normal (kbd "[b") 'previous-buffer)
 
   (evil-set-undo-system 'undo-tree)
+
 #+end_src
 
 * Auto completion
@@ -338,6 +398,8 @@ For auto completion i'm using company, there are none better
   	       ("M-A" . marginalia-cycle))
     :init
     (marginalia-mode))
+
+  (use-package consult) 
 #+end_src
 
 * Org mode config
@@ -455,6 +517,7 @@ I use flycheck for my error displaying need and format all to format files on de
 
 #+end_src
 
+
 ** copilot
 
 #+begin_src elisp
@@ -529,11 +592,12 @@ I use flycheck for my error displaying need and format all to format files on de
 
 #+begin_src elisp
 
-   (use-package rust-mode
-  :hook
-  (rust-mode-hook . #'lsp)
-   :init
-  (setq rust-mode-treesitter-derive t))
+  (use-package rust-mode
+  :init
+  (setq rust-mode-treesitter-derive t)
+  :config
+  (add-hook 'rust-mode-hook 'lsp)
+  )
 
 #+end_src
 
@@ -577,5 +641,16 @@ I use flycheck for my error displaying need and format all to format files on de
 
   (global-so-long-mode 1)
   (add-hook 'so-long-hook #'crypto/so-long)
+
+#+end_src
+
+
+* Performance
+
+#+begin_src elisp
+
+  (setq read-process-output-max (* 3072 3072))
+  (setq gc-cons-threshold 200000000)
+  (setq lsp-idle-delay 0.500)
 
 #+end_src
