@@ -290,6 +290,15 @@ Because the undo system in emacs sucks balls, i'm using undo-tree
     "ot" 'org-todo
     "or" 'org-refile
 
+    ;; magit && git
+    "v" '(:ignore t :which-key "magit")
+    "vb" 'magit-blame
+    "vl" 'magit-log-buffer-file
+    "vd" 'magit-diff-buffer-file
+    "vc" 'magit-file-checkout
+    "vs" 'magit-stage
+    "vu" 'magit-unstage
+    "vU" 'magit-file-untrack
     )
 
 
@@ -318,7 +327,7 @@ For auto completion i'm using company, there are none better
   	            ("C-e" . company-complete-selection))
     :custom
     (company-minimum-prefix-length 3)
-    (company-idle-delay 0.0))
+    (company-idle-delay 1.0))
 
   (defun text-mode-hook-setup ()
     ;; make `company-backends' local is critcal
