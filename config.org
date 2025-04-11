@@ -1,12 +1,14 @@
 #+Title: My emacs config
 #+Author: Dhia Dahmeni
-#+Date: 2024
+#+Date: 2025
 #+PROPERTY: header-args :tangle init.el
 
 * Required settings
 These settings are the barebones to using emacs, they also don't require any packages
 
 #+BEGIN_SRC emacs-lisp
+
+  (add-to-list 'default-frame-alist '(fullscreen . maximized))
   (setq gc-cons-threshold (* 50 1000 1000))
   (setq ring-bell-function 'ignore)
   (defun crypt/display-startup-time ()
@@ -15,7 +17,6 @@ These settings are the barebones to using emacs, they also don't require any pac
                      (float-time
                       (time-subtract after-init-time before-init-time)))
              gcs-done))
-
 
   (add-hook 'emacs-startup-hook #'crypt/display-startup-time)
 
@@ -31,13 +32,22 @@ These settings are the barebones to using emacs, they also don't require any pac
   (load custom-file)
 
   (global-auto-revert-mode t)
+
+  (add-to-list 'exec-path "/opt/homebrew/bin")
+
+  (setenv "PATH" (concat "/opt/homebrew/bin:" (getenv "PATH")))
+
+
+  (add-to-list 'exec-path "/Users/macbook/.local/bin")
+
+  (setenv "PATH" (concat "/Users/macbook/.local/bin" (getenv "PATH")))
 #+END_SRC
 
 * Package manager
 For package management I'm using straight.el
 #+BEGIN_SRC emacs-lisp 
   ;; Initialize package sources
-  (setq straight-repository-branch "develop")
+  (setq straight-repository-branch "master")
 
   ;; Install straight.el
   (defvar bootstrap-version)
@@ -46,13 +56,16 @@ For package management I'm using straight.el
         (bootstrap-version 6))
     (unless (file-exists-p bootstrap-file)
       (with-current-buffer
-  	      (url-retrieve-synchronously
-  	       "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
-  	       'silent 'inhibit-cookies)
+      	  (url-retrieve-synchronously
+      	   "https://raw.githubusercontent.com/radian-software/straight.el/develop/install.el"
+      	   'silent 'inhibit-cookies)
         (goto-char (point-max))
         (eval-print-last-sexp)))
     (load bootstrap-file nil 'nomessage))
 
+  ;; Prefer built-in packages
+  (dolist (pkg '(project xref eldoc flymake jsonrpc eglot))
+    (straight-override-recipe `(,pkg :type built-in)))
   ;; Install use-package
   (straight-use-package 'use-package)
 
@@ -92,26 +105,25 @@ For package management I'm using straight.el
                   pdf-view-mode-hook))
     (add-hook mode (lambda () (display-line-numbers-mode 0))))
 
-  (set-face-attribute 'default nil :font "Hack" :height 120)
+  (set-face-attribute 'default nil :font "Hack" :height 160)
 
-  (use-package doom-themes
-    
-    :config
-    ;; Global settings (defaults)
-    (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
-          doom-themes-enable-italic t) ; if nil, italics is universally disabled
-    (load-theme 'doom-tomorrow-night t)
+(use-package doom-themes
+  :ensure t
+  :config
+  ;; Global settings (defaults)
+  (setq doom-themes-enable-bold t    ; if nil, bold is universally disabled
+        doom-themes-enable-italic t) ; if nil, italics is universally disabled
+  (load-theme 'doom-gruvbox t)
 
-    ;; Enable flashing mode-line on errors
-    (doom-themes-visual-bell-config)
-    ;; Enable custom neotree theme (all-the-icons must be installed!)
-    (doom-themes-neotree-config)
-    ;; or for treemacs users
-    (setq doom-themes-treemacs-theme "doom-gruvbox") ; use "doom-colors" for less minimal icon theme
-    (doom-themes-treemacs-config)
-    ;; Corrects (and improves) org-mode's native fontification.
-    (doom-themes-org-config))
-
+  ;; Enable flashing mode-line on errors
+  (doom-themes-visual-bell-config)
+  ;; Enable custom neotree theme (nerd-icons must be installed!)
+  (doom-themes-neotree-config)
+  ;; or for treemacs users
+  (setq doom-themes-treemacs-theme "doom-atom") ; use "doom-colors" for less minimal icon theme
+  (doom-themes-treemacs-config)
+  ;; Corrects (and improves) org-mode's native fontification.
+  (doom-themes-org-config))
   ;; Transperancy
   (add-to-list 'default-frame-alist '(alpha-background . 96)) ; For all new frames henceforth
 
@@ -123,6 +135,7 @@ For package management I'm using straight.el
     :init
     (global-git-gutter-mode t))
 
+  (setq treesit-extra-load-path (list "~/.emacs.d/straight/build/tree-sitter-langs/bin"))
   ;; tree sitter langs for tree sitter integration
   (use-package tree-sitter-langs)
 
@@ -148,19 +161,15 @@ For package management I'm using straight.el
   (use-package all-the-icons-dired
     :hook (dired-mode . all-the-icons-dired-mode))
 
-  (use-package lsp-ui)
-
-
   ;; File tree
-  (use-package treemacs
-    :defer t)
 
 #+end_src
 
 * Terminal
 best terminal around
 #+begin_src emacs-lisp
-  (use-package vterm)
+(use-package vterm
+  :hook (vterm-mode . (lambda () (display-line-numbers-mode 0))))
 
 #+end_src
 * Undo
@@ -195,7 +204,7 @@ Because the undo system in emacs sucks balls, i'm using undo-tree
 
   (use-package evil-owl
     :config
-    (setq evil-owl-max-string-length 500)
+    (setq evil-owl-max-string-length 200)
     (add-to-list 'display-buffer-alist
                  '("*evil-owl*"
                    (display-buffer-in-side-window)
@@ -216,10 +225,6 @@ Because the undo system in emacs sucks balls, i'm using undo-tree
     :non-normal-prefix "C-SPC")
 
   (general-evil-setup t)
-  (general-nmap
-    :keymaps 'lsp-mode-map
-    :predicate 'lsp-mode
-    "K" 'lsp-ui-doc-show)
 
   (tyrant-def-1
     ""     nil
@@ -252,35 +257,37 @@ Because the undo system in emacs sucks balls, i'm using undo-tree
     ;; Buffer operations
     "b"   '(:ignore t :which-key "buffer")
     "bb"  'mode-line-other-buffer
-    "bd"  'kill-this-buffer
+    "bd"  (lambda () (interactive) (kill-this-buffer))
     "bD"  'vb/close-all-buffers
     "bq"  'kill-buffer-and-window
     "bR"  'rename-filand-buffer
 
-    "l"  '(:ignore t :which-key "lsp")
-    "lr" 'lsp-find-references
-    "ld" 'lsp-find-definition
-    "lh" 'lsp-describe-session
-    "ls" 'lsp-find-symbol
-    "lx" 'lsp-execute-code-action
-    "lR" 'lsp-restart-workspace
-    "lS" 'lsp-shutdown-workspace
-    "lD" 'lsp-find-declaration
-    "lF" 'lsp-find-type-definition
-    "lI" 'lsp-find-implementation
-    "lT" 'lsp-find-type-definition
-    "lU" 'lsp-find-references
-    "lW" 'lsp-organize-imports
+    ;; Eglot equivalents for your LSP keybindings
+    "l"  '(:ignore t :which-key "lsp")  ; Assuming this is a prefix label
+    "ln" 'xref-find-references           ; Find references (Eglot uses xref)
+    "ld" 'xref-find-definitions          ; Jump to definition (Eglot uses xref)
+    "lh" 'eglot-help-at-point            ; Describe session/info at point
+    "ls" 'consult-eglot-symbols          ; Find symbols (requires consult package)
+    "lx" 'eglot-code-actions             ; Execute code actions
+    "lR" 'eglot-reconnect                ; Restart/reconnect to server
+    "lS" 'eglot-shutdown                 ; Shutdown server
+    "lD" 'xref-find-definitions          ; No direct declaration support, using definition
+    "lF" 'eglot-find-type-definition    ; Find type definition (server-dependent)
+    "lI" 'eglot-find-implementation     ; Find implementation (server-dependent)
+    "lT" 'eglot-find-type-definition    ; Find type definition (same as lF)
+    "lU" 'xref-find-references           ; Find references (same as lr)
+    "lW" 'eglot-format                   ; Organize imports or format (server-dependent)
+    "lr" 'eglot-rename
 
     "e" '(:ignore t :which-key "errors")
-    "en" 'flycheck-next-error
-    "ep" 'flycheck-previous-error
-    "el" 'flycheck-list-errors
+    "en" 'flymake-goto-next-error
+    "ep" 'flymake-goto-prev-error
+    "el" 'consult-flymake
 
     "t" '(:ignore t :which-key "toggle")
-    "tt" 'treemacs
     "td" 'dired
     "tg" 'magit-status
+    "tv" 'vterm
 
     "o" '(:ignore t :which-key "org")
     "oa" 'org-agenda
@@ -317,31 +324,32 @@ Because the undo system in emacs sucks balls, i'm using undo-tree
 #+end_src
 
 * Auto completion
-For auto completion i'm using company, there are none better
+For auto completion i'm using corfu, there are none better
 #+begin_src emacs-lisp
 
-  (use-package company
-    :init (global-company-mode)
-    ;; (setq company-global-modes '(not org-mode))
-    :bind (:map company-active-map
-  	            ("C-e" . company-complete-selection))
+  ;; Corfu with use-package
+  (use-package corfu
+    :ensure t  ; Automatically install from MELPA
+    :init
+    (global-corfu-mode)  ; Enable Corfu globally
+    :bind
+    (:map corfu-map
+          ("TAB" . corfu-complete))  ; Complete selection with C-e
     :custom
-    (company-minimum-prefix-length 3)
-    (company-idle-delay 1.0))
+    (corfu-auto t)               ; Enable auto-completion
+    (corfu-auto-prefix 3)        ; Trigger after 3 characters
+    (corfu-auto-delay 1.0)       ; Delay before showing completions
+    (corfu-quit-no-match t))     ; Quit if no match
 
+  ;; Text mode setup for ispell completion
   (defun text-mode-hook-setup ()
-    ;; make `company-backends' local is critcal
-    ;; or else, you will have completion in every major mode, that's very annoying!
-    (make-local-variable 'company-backends)
+    "Customize completion backends for text modes."
+    (make-local-variable 'completion-at-point-functions)
+    (add-to-list 'completion-at-point-functions 'ispell-completion-at-point))
 
-    ;; company-ispell is the plugin to complete words
-    (add-to-list 'company-backends 'company-ispell))
-
+  ;; Apply to text-mode and org-mode
   (add-hook 'text-mode-hook 'text-mode-hook-setup)
   (add-hook 'org-mode-hook 'text-mode-hook-setup)
-
-  (use-package company-box
-  :hook (company-mode . company-box-mode))
 
 #+end_src
 
@@ -462,7 +470,7 @@ For auto completion i'm using company, there are none better
   (add-to-list 'org-structure-template-alist '("py" . "src python"))
 
   (defun crypt/org-mode-visual-fill ()
-    (setq visual-fill-column-width 100
+    (setq visual-fill-column-width 500
   	      visual-fill-column-center-text t)
     (visual-fill-column-mode 1))
 
@@ -476,6 +484,7 @@ For auto completion i'm using company, there are none better
   (use-package dired
     :straight (:type built-in)
     :commands (dired dired-jump)
+    :config (setq insert-directory-program "gls")
     :custom ((dired-listing-switches "-agho --group-directories-first")))
 
   (use-package dired-single)
@@ -483,11 +492,7 @@ For auto completion i'm using company, there are none better
 
 * Programming
 ** Diagnostics and formatting
-I use flycheck for my error displaying need and format all to format files on demand
 #+begin_src elisp
-  (use-package flycheck
-    :init (global-flycheck-mode))
-
   (use-package format-all
     :preface
     (defun crypt/format-code ()
@@ -504,42 +509,23 @@ I use flycheck for my error displaying need and format all to format files on de
 ** Tools  
 
 #+begin_src elisp
+
   (use-package docker
-    :defer t)
+  	:defer t
+  	:ensure t
+  	:bind ("C-c d" . docker)
+  	:config
+  	(setq docker-command "docker"
+  			  docker-compose-command "docker-compose"
+  			  docker-container-tramp-method "docker"))
 #+end_src
 
-** LSP language servers
+** LSP
 
 #+begin_src elisp
-      (use-package lsp-mode
-        :init
-        ;; set prefix for lsp-command-keymap (few alternatives - "C-l", "C-c l")
-        :hook (;; replace XXX-mode with concrete major-mode(e. g. python-mode)
-        (lsp-mode . (lambda ()
-                          (let ((lsp-keymap-prefix "C-c l"))
-                            (lsp-enable-which-key-integration))))       ;; if you want which-key integration
-               (lsp-mode . lsp-enable-which-key-integration))
-        :commands lsp
-        :config
-        (define-key lsp-mode-map (kbd "C-c l") lsp-command-map)
-  )
-
-#+end_src
-
-
-** copilot
-
-#+begin_src elisp
-    (use-package copilot
-    :straight (:host github :repo "copilot-emacs/copilot.el" :files ("dist" "*.el"))
-  :hook
-  (prog-mode . copilot-mode)
-    :config
-    
-  (define-key copilot-completion-map (kbd "<tab>") 'copilot-accept-completion)
-  (define-key copilot-completion-map (kbd "TAB") 'copilot-accept-completion)
-    :ensure t)
-
+(use-package eglot
+  :straight (:type built-in)
+  :ensure nil)
 #+end_src
 
 ** Languages
@@ -547,7 +533,6 @@ I use flycheck for my error displaying need and format all to format files on de
 *** Indent
 #+begin_src elisp
 
-  ;; tabs are evil
   (setq-default tab-width 2)
   (setq-default indent-tabs-mode nil)
   (setq-default c-basic-offset 2)
@@ -556,22 +541,11 @@ I use flycheck for my error displaying need and format all to format files on de
 
 *** Python
 #+begin_src elisp
+    (add-hook 'python-mode-hook 'eglot-ensure)  ; Python
+  (add-to-list 'eglot-server-programs
+              '((python-mode python-ts-mode)
+              "basedpyright-langserver" "--stdio"))
 
-  (use-package lsp-pyright
-    :hook (python-mode . (lambda ()
-                           (require 'lsp-pyright)
-                           (lsp))))  ; or lsp-deferred
-
-  ;; (setq lsp-pyright-use-library-code-for-types nil) ;; set this to nil if getting too many false positive type errors
-  (setq lsp-pyright-auto-import-completions nil)
-
-  (use-package conda
-    :init
-    ;; if you want interactive shell support, include:
-    (conda-env-initialize-interactive-shells)
-    ;; if you want eshell support, include:
-    (conda-env-initialize-eshell))
-  (use-package ein)
 #+end_src
 
 *** TS/JS/Web
@@ -591,9 +565,11 @@ I use flycheck for my error displaying need and format all to format files on de
     (setq web-mode-content-types-alist '(("jsx" . "\\.js[x]?\\'"))))
 
   ;; js/ts Development
-  (use-package typescript-mode
-    :config
-    (add-hook 'web-mode-hook 'lsp))
+  (use-package typescript-mode)
+
+  ;; Ensure Eglot starts for TypeScript
+  (add-hook 'typescript-mode-hook 'eglot-ensure)
+  (add-hook 'js-mode-hook 'eglot-ensure)
 
 #+end_src
 
@@ -601,12 +577,14 @@ I use flycheck for my error displaying need and format all to format files on de
 
 #+begin_src elisp
 
-  (use-package rust-mode
-  :init
-  (setq rust-mode-treesitter-derive t)
-  :config
-  (add-hook 'rust-mode-hook 'lsp)
-  )
+  (use-package rust-mode)
+
+#+end_src
+
+*** Zig
+
+#+begin_src elisp
+  (use-package zig-mode)
 
 #+end_src
 
@@ -623,22 +601,22 @@ I use flycheck for my error displaying need and format all to format files on de
   (custom-set-variables
    '(markdown-command "/usr/bin/pandoc"))
 
-    (use-package pdf-tools
-      :config
-      (pdf-tools-install)
-      (setq-default pdf-view-display-size 'fit-width)
-      (define-key pdf-view-mode-map (kbd "C-s") 'isearch-forward)
-      :custom
-      (pdf-annot-activate-created-annotations t "automatically annotate highlights"))
+  (use-package pdf-tools
+    :config
+    (pdf-tools-install)
+    (setq-default pdf-view-display-size 'fit-width)
+    (define-key pdf-view-mode-map (kbd "C-s") 'isearch-forward)
+    :custom
+    (pdf-annot-activate-created-annotations t "automatically annotate highlights"))
 
-    (setq TeX-view-program-selection '((output-pdf "PDF Tools"))
-          TeX-view-program-list '(("PDF Tools" TeX-pdf-tools-sync-view))
-          TeX-source-correlate-start-server t)
+  (setq TeX-view-program-selection '((output-pdf "PDF Tools"))
+        TeX-view-program-list '(("PDF Tools" TeX-pdf-tools-sync-view))
+        TeX-source-correlate-start-server t)
 
-    (add-hook 'TeX-after-compilation-finished-functions
-              #'TeX-revert-document-buffer)
+  (add-hook 'TeX-after-compilation-finished-functions
+            #'TeX-revert-document-buffer)
 
-    (add-hook 'pdf-view-mode-hook (lambda() (linum-mode -1)))
+  (add-hook 'pdf-view-mode-hook (lambda() (linum-mode -1)))
 #+end_src
 * Misc
 #+begin_src elisp
@@ -660,6 +638,5 @@ I use flycheck for my error displaying need and format all to format files on de
 
   (setq read-process-output-max (* 3072 3072))
   (setq gc-cons-threshold 200000000)
-  (setq lsp-idle-delay 0.500)
 
 #+end_src
