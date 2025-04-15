@@ -181,6 +181,18 @@ Because the undo system in emacs sucks balls, i'm using undo-tree
     (setq undo-tree-history-directory-alist '(("." . "~/.emacs.d/backup/"))))
 #+end_src
 
+* Workspaces
+#+begin_src emacs-lisp
+        (use-package persp-mode
+          :ensure t
+          :config
+          (persp-mode 1)                    ; Enable persp-mode
+          (setq persp-auto-save-opt 1)      ; Save perspectives on exit
+          (setq persp-auto-resume-time 1)
+          (global-set-key (kbd "C-c p N") 'persp-add-new))  ; Resume perspectives 1 second after startup
+          
+#+end_src
+
 * Keybinds and EVIL
 
 #+begin_src emacs-lisp
@@ -218,7 +230,6 @@ Because the undo system in emacs sucks balls, i'm using undo-tree
     :config
     (general-override-mode 1))
 
-
   (general-create-definer tyrant-def-1
     :states '(normal visual insert motion emacs)
     :prefix "SPC"
@@ -226,87 +237,208 @@ Because the undo system in emacs sucks balls, i'm using undo-tree
 
   (general-evil-setup t)
 
+  ;; Define major mode bindings for Org-mode
+  (general-define-key
+   :keymaps 'org-mode-map
+   :states '(normal visual)
+   :prefix "SPC m"
+   "r r" 'org-refile) ;; SPC m r r -> refile Org entry
+
   (tyrant-def-1
     ""     nil
-    "c"   (general-simulate-key "C-c")
-    "h"   (general-simulate-key "C-h")
-    "x"   (general-simulate-key "C-x")
-    "w"   (general-simulate-key "C-w")
-    "p"   (general-simulate-key "C-x p")
-    "SPC"   'consult-buffer
+    ":"    'execute-extended-command ;; SPC : -> M-x
+    "c"    (general-simulate-key "C-c")
+    "h"    '(:ignore t :which-key "help") ;; Repurposed for help commands
+    "x"    (general-simulate-key "C-x")
+    "w"    '(:ignore t :which-key "window")
+    "p"    (general-simulate-key "C-x p")
+    "TAB" (general-simulate-key "C-c p")
+    "SPC"  'consult-buffer
+    "."    'dired-jump ;; SPC . -> create/find file in Dired
+    "X"    'org-capture ;; SPC X -> org capture
 
-    ;; searching files by consult
-    "f"   '(:ignore t :which-key "files")
-    "ff"  'consult-find
-    ;; use ripgrep for searching
-    "fg"  'consult-ripgrep
+    ;; Help commands
+    "h k"  'describe-key ;; SPC h k -> describe key
+    "h w"  'where-is ;; SPC h w -> find shortcuts
+    "h v"  'describe-variable ;; SPC h v -> describe variable
+    "h f"  'describe-function ;; SPC h f -> describe function
+    "h b"  '(:ignore t :which-key "bindings")
+    "h b b" 'which-key-show-top-level ;; SPC h b b -> list all keybindings
 
-    ;; searching inside buffer
-    "s"   '(:ignore t :which-key "search")
-    "ss"  'consult-line
-    "sb"  'consult-buffer
+    ;; Files
+    "f"    '(:ignore t :which-key "files")
+    "ff"   'find-file
+    "fS-f" 'consult-find
+    "fs"   'save-buffer
+    "fS-s" 'write-file
+    "fD"   'delete-file ;; SPC f D -> delete current file
+    "fr"   'consult-recent-file ;; SPC f r -> recent files
+    "fp"   '((lambda () (interactive) (find-file "~/.emacs.d/init.el")) :which-key "private config") ;; SPC f p -> open config
+    "fg"   'consult-ripgrep
 
-    ;; Package manager
-    "lp"  'list-packages
+    ;; Search
+    "s"    '(:ignore t :which-key "search")
+    "ss"   'consult-line
+    "sb"   'consult-buffer
+    "sp"   'project-search
+    "sS-p" 'project-search
+    "sd"   'consult-ripgrep
+    "sS-d" 'consult-ripgrep
 
-    ;; Quit operations
-    "q"	'(:ignore t :which-key "quit emacs")
-    "qq"  'kill-emacs
-    "qz"  'delete-frame
+    ;; Quit
+    "q"    '(:ignore t :which-key "quit")
+    "qq"   'kill-emacs
+    "wqa"  'save-buffers-kill-terminal
+    "qr"   'restart-emacs
+    "qz"   'delete-frame
 
-    ;; Buffer operations
-    "b"   '(:ignore t :which-key "buffer")
-    "bb"  'mode-line-other-buffer
-    "bd"  (lambda () (interactive) (kill-this-buffer))
-    "bD"  'vb/close-all-buffers
-    "bq"  'kill-buffer-and-window
-    "bR"  'rename-filand-buffer
+    ;; Buffers
+    "b"    '(:ignore t :which-key "buffer")
+    "bb"   'consult-buffer
+    "bB"   'consult-buffer ;; SPC b B -> see all buffers
+    "bS-b" 'consult-buffer-other-window
+    "bd"   (lambda () (interactive) (kill-this-buffer))
+    "bD"   'vb/close-all-buffers
+    "bq"   'kill-buffer-and-window
+    "bR"   'rename-file-and-buffer
+    "bx"   'scratch-buffer
+    "bS-x" 'switch-to-scratch-buffer
+    "bs"   'save-buffer ;; SPC b s -> save and name buffer
 
-    ;; Eglot equivalents for your LSP keybindings
-    "l"  '(:ignore t :which-key "lsp")  ; Assuming this is a prefix label
-    "ln" 'xref-find-references           ; Find references (Eglot uses xref)
-    "ld" 'xref-find-definitions          ; Jump to definition (Eglot uses xref)
-    "lh" 'eglot-help-at-point            ; Describe session/info at point
-    "ls" 'consult-eglot-symbols          ; Find symbols (requires consult package)
-    "lx" 'eglot-code-actions             ; Execute code actions
-    "lR" 'eglot-reconnect                ; Restart/reconnect to server
-    "lS" 'eglot-shutdown                 ; Shutdown server
-    "lD" 'xref-find-definitions          ; No direct declaration support, using definition
-    "lF" 'eglot-find-type-definition    ; Find type definition (server-dependent)
-    "lI" 'eglot-find-implementation     ; Find implementation (server-dependent)
-    "lT" 'eglot-find-type-definition    ; Find type definition (same as lF)
-    "lU" 'xref-find-references           ; Find references (same as lr)
-    "lW" 'eglot-format                   ; Organize imports or format (server-dependent)
-    "lr" 'eglot-rename
+    ;; Window management
+    "ws"   'split-window-below
+    "wv"   'split-window-right
+    "wd"   'delete-window
+    "wh"   'evil-window-left
+    "wj"   'evil-window-down
+    "wk"   'evil-window-up
+    "wl"   'evil-window-right
+    "wS-h" 'evil-window-move-far-left
+    "wS-j" 'evil-window-move-far-down
+    "wS-k" 'evil-window-move-far-up
+    "wS-l" 'evil-window-move-far-right
+    "wC-S-h" 'evil-window-move-far-left
+    "wC-S-j" 'evil-window-move-far-down
+    "wC-S-k" 'evil-window-move-far-up
+    "wC-S-l" 'evil-window-move-far-right
+    "wu"   'winner-undo
+    "wC-r" 'winner-redo
+    "wo"   'enlarge-window
+    "wmm"  'delete-other-windows
+    "w|"   'set-window-width
+    "w_"   'set-window-height
+    "ww"   'other-window ;; SPC w w -> switch windows
+    "wq"   'delete-window ;; SPC w q -> close window
+    "w+"   'enlarge-window ;; SPC w + -> increase height
+    "w-"   'shrink-window ;; SPC w - -> decrease height
+    "w>"   'enlarge-window-horizontally ;; SPC w > -> increase width
+    "w<"   'shrink-window-horizontally ;; SPC w < -> decrease width
+    "wH"   'evil-window-move-far-left ;; SPC w H -> move window left
 
-    "e" '(:ignore t :which-key "errors")
-    "en" 'flymake-goto-next-error
-    "ep" 'flymake-goto-prev-error
-    "el" 'consult-flymake
+    ;; Open
+    "o"    '(:ignore t :which-key "open")
+    "oa"   'org-agenda
+    "oc"   'org-capture
+    "ol"   'org-store-link
+    "os"   'org-schedule
+    "ot"   'org-todo
+    "or"   'org-refile
+    "ov" 'my/new-vterm                                 ; SPC o t -> New vterm
+    "oE"   'eshell ;; SPC o E -> open eshell fullscreen
 
-    "t" '(:ignore t :which-key "toggle")
-    "td" 'dired
-    "tg" 'magit-status
-    "tv" 'vterm
+    ;; Eglot/LSP
+    "l"    '(:ignore t :which-key "lsp")
+    "ln"   'xref-find-references
+    "ld"   'xref-find-definitions
+    "lh"   'eglot-help-at-point
+    "ls"   'consult-eglot-symbols
+    "lx"   'eglot-code-actions
+    "lR"   'eglot-reconnect
+    "lS"   'eglot-shutdown
+    "lD"   'xref-find-definitions
+    "lF"   'eglot-find-type-definition
+    "lI"   'eglot-find-implementation
+    "lT"   'eglot-find-type-definition
+    "lU"   'xref-find-references
+    "lW"   'eglot-format
+    "lr"   'eglot-rename
 
-    "o" '(:ignore t :which-key "org")
-    "oa" 'org-agenda
-    "oc" 'org-capture
-    "ol" 'org-store-link
-    "os" 'org-schedule
-    "ot" 'org-todo
-    "or" 'org-refile
+    ;; Errors
+    "e"    '(:ignore t :which-key "errors")
+    "en"   'flymake-goto-next-error
+    "ep"   'flymake-goto-prev-error
+    "el"   'consult-flymake
 
-    ;; magit && git
-    "v" '(:ignore t :which-key "magit")
-    "vb" 'magit-blame
-    "vl" 'magit-log-buffer-file
-    "vd" 'magit-diff-buffer-file
-    "vc" 'magit-file-checkout
-    "vs" 'magit-stage
-    "vu" 'magit-unstage
-    "vU" 'magit-file-untrack
+    ;; Toggle
+    "t"    '(:ignore t :which-key "toggle")
+    "td"   'dired
+    "tg"   'magit-status
+    "tv"   'vterm
+
+    ;; Magit
+    "g"    '(:ignore t :which-key "git")
+    "g g"  'magit-status ;; SPC g g -> magit status
+
+    ;; Existing Magit bindings
+    "v"    '(:ignore t :which-key "magit")
+    "vb"   'magit-blame
+    "vl"   'magit-log-buffer-file
+    "vd"   'magit-diff-buffer-file
+    "vc"   'magit-file-checkout
+    "vs"   'magit-stage
+    "vu"   'magit-unstage
+    "vU"   'magit-file-untrack
+
+    "C-c p N" 'persp-add-new  ; Prompts for name
     )
+
+  (defun my/new-vterm ()
+    "Split the window horizontally and create a new vterm buffer with an incremental name."
+    (interactive)
+    (split-window-below)
+    (other-window 1)
+    (let* ((n 1)
+           (base-name "vterm")
+           (buffer-name (format "%s-%d" base-name n)))
+      (while (get-buffer buffer-name)
+        (setq n (1+ n))
+        (setq buffer-name (format "%s-%d" base-name n)))
+      (vterm buffer-name)))
+
+  ;; Additional functions
+  (defun scratch-buffer ()
+    "Open a global scratch buffer in a popup."
+    (interactive)
+    (pop-to-buffer (get-buffer-create "*scratch*")))
+
+  (defun switch-to-scratch-buffer ()
+    "Switch to global scratch buffer in current window."
+    (interactive)
+    (switch-to-buffer (get-buffer-create "*scratch*")))
+
+  (defun project-scratch-buffer ()
+    "Open a project-local scratch buffer in a popup."
+    (interactive)
+    (let ((proj (project-current t)))
+      (pop-to-buffer (get-buffer-create
+                      (format "*scratch-%s*" (project-name proj))))))
+
+  (defun project-switch-to-scratch-buffer ()
+    "Switch to project-local scratch buffer in current window."
+    (interactive)
+    (let ((proj (project-current t)))
+      (switch-to-buffer (get-buffer-create
+                         (format "*scratch-%s*" (project-name proj))))))
+
+  (defun set-window-width (width)
+    "Set window width to WIDTH columns, with prefix argument."
+    (interactive "p")
+    (window-resize nil (- width (window-width)) t))
+
+  (defun set-window-height (height)
+    "Set window height to HEIGHT lines, with prefix argument."
+    (interactive "p")
+    (window-resize nil (- height (window-height)) nil))
 
 
   ;; cycle through errors
@@ -321,7 +453,7 @@ Because the undo system in emacs sucks balls, i'm using undo-tree
 
   (evil-set-undo-system 'undo-tree)
 
-#+end_src
+    #+end_src
 
 * Auto completion
 For auto completion i'm using corfu, there are none better
@@ -430,53 +562,52 @@ For auto completion i'm using corfu, there are none better
   (use-package org
     :hook (org-mode . crypt/org-mode-setup)
     :config
-    (setq org-agenda-files
-  	      '("~/Documents/org/todo.org"))
+    (setq org-agenda-files '("~/org/todo.org" "~/org/journal.org"))
     (setq org-agenda-start-with-log-mode t)
     (setq org-log-done 'time)
     (setq org-ellipsis " ▾")
 
     (setq org-capture-templates
-  	      `(("t" "Tasks / Projects")
-  	        ("tt" "Task" entry (file+olp "~/Documents/org/todo.org" "Inbox")
-  	         "* TODO %?\n  %U\n  %a\n  %i" :empty-lines 1)
+          '(("t" "Tasks / Projects")
+            ("tt" "Task" entry (file+olp "~/org/todo.org" "Inbox")
+             "* TODO %^{TODO keyword} %?\n  SCHEDULED: %^t\n  %i\n  %a")
 
-  	        ("j" "Journal Entries")
-  	        ("jj" "Journal" entry
-  	         (file+olp+datetree "~/Documents/org/journal.org")
-  	         "\n* %<%I:%M %p> - Journal :journal:\n\n%?\n\n"
-  	         :clock-in :clock-resume
-  	         :empty-lines 1)
-  	        ("jm" "Meeting" entry
-  	         (file+olp+datetree "~/Documents/org/journal.org")
-  	         "* %<%I:%M %p> - %a :meetings:\n\n%?\n\n"
-  	         :clock-in :clock-resume
-  	         :empty-lines 1))))
+            ("j" "Journal Entries")
+            ("jj" "Journal" entry
+             (file+olp+datetree "~/org/journal.org")
+             "\n* %<%I:%M %p> - %^{Title} :journal:\n  SCHEDULED: %^t\n\n%?\n\n"
+             :clock-in :clock-resume
+             :empty-lines 1)
+            ("jm" "Meeting" entry
+             (file+olp+datetree "~/org/journal.org")
+             "* %^{Meeting title} :meetings:\n  SCHEDULED: %^t\n\n%?\n\n"
+             :clock-in :clock-resume
+             :empty-lines 1))))
 
-  (use-package org-bullets
-    :after org
-    :hook (org-mode . org-bullets-mode)
-    :custom
-    (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+    (use-package org-bullets
+      :after org
+      :hook (org-mode . org-bullets-mode)
+      :custom
+      (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
 
-  (org-babel-do-load-languages
-   'org-babel-load-languages
-   '((emacs-lisp . t)
-     (python . t)))
+    (org-babel-do-load-languages
+     'org-babel-load-languages
+     '((emacs-lisp . t)
+       (python . t)))
 
-  (require 'org-tempo)
-  (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
-  (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
-  (add-to-list 'org-structure-template-alist '("py" . "src python"))
+    (require 'org-tempo)
+    (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
+    (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
+    (add-to-list 'org-structure-template-alist '("py" . "src python"))
 
-  (defun crypt/org-mode-visual-fill ()
-    (setq visual-fill-column-width 500
-  	      visual-fill-column-center-text t)
-    (visual-fill-column-mode 1))
+    (defun crypt/org-mode-visual-fill ()
+      (setq visual-fill-column-width 500
+    	      visual-fill-column-center-text t)
+      (visual-fill-column-mode 1))
 
-  (use-package visual-fill-column
-    :hook (org-mode . crypt/org-mode-visual-fill))
-#+end_src
+    (use-package visual-fill-column
+      :hook (org-mode . crypt/org-mode-visual-fill))
+    #+end_src
 
 * File manager
 
@@ -523,9 +654,9 @@ For auto completion i'm using corfu, there are none better
 ** LSP
 
 #+begin_src elisp
-(use-package eglot
-  :straight (:type built-in)
-  :ensure nil)
+  (use-package eglot
+    :straight (:type built-in)
+    :ensure nil)
 #+end_src
 
 ** Languages
@@ -541,10 +672,10 @@ For auto completion i'm using corfu, there are none better
 
 *** Python
 #+begin_src elisp
-    (add-hook 'python-mode-hook 'eglot-ensure)  ; Python
+  (add-hook 'python-mode-hook 'eglot-ensure)  ; Python
   (add-to-list 'eglot-server-programs
-              '((python-mode python-ts-mode)
-              "basedpyright-langserver" "--stdio"))
+               '((python-mode python-ts-mode)
+                 "basedpyright-langserver" "--stdio"))
 
 #+end_src
 
@@ -565,11 +696,18 @@ For auto completion i'm using corfu, there are none better
     (setq web-mode-content-types-alist '(("jsx" . "\\.js[x]?\\'"))))
 
   ;; js/ts Development
-  (use-package typescript-mode)
+  (use-package typescript-mode
+    :config
+    (setq typescript-indent-level 2))
 
   ;; Ensure Eglot starts for TypeScript
   (add-hook 'typescript-mode-hook 'eglot-ensure)
   (add-hook 'js-mode-hook 'eglot-ensure)
+
+  (add-hook 'typescript-mode-hook
+            (lambda ()
+              (setq tab-width 2)
+              (setq evil-shift-width typescript-indent-level)))
 
 #+end_src
 
